@@ -10,6 +10,7 @@ pub mod offers;
 pub mod payment;
 pub mod sale;
 pub mod state;
+use hashbrown::{HashMap, HashSet};
 use state::*;
 
 pub type ContractAndTokenId = String;
@@ -18,16 +19,14 @@ const MIN_TREASURY_FEE: u8 = 0;
 const MAX_TREASURT_FEE: u8 = 5;
 pub const BASE_PERCENT: u8 = 100;
 
-#[derive(Debug, Default, Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[derive(Debug, Default)]
 pub struct Market {
     pub admin_id: ActorId,
     pub treasury_id: ActorId,
     pub treasury_fee: u8,
-    pub items: BTreeMap<ContractAndTokenId, Item>,
-    pub approved_nft_contracts: BTreeSet<ActorId>,
-    pub approved_ft_contracts: BTreeSet<ActorId>,
+    pub items: HashMap<ContractAndTokenId, Item>,
+    pub approved_nft_contracts: HashSet<ActorId>,
+    pub approved_ft_contracts: HashSet<ActorId>,
 }
 
 static mut MARKET: Option<Market> = None;
