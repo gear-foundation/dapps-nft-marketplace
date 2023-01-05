@@ -212,7 +212,7 @@ fn settle_auction() {
     assert!(res.contains(&(
         USERS[0],
         MarketEvent::ItemInfo(Item {
-            owner_id: USERS[3].into(),
+            owner: USERS[3].into(),
             ft_contract_id: None,
             price: None,
             auction: None,

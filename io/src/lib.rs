@@ -1,6 +1,6 @@
 #![no_std]
 use gstd::{prelude::*, ActorId};
-use primitive_types::{H256, U256};
+use primitive_types::{U256};
 
 pub type ContractId = ActorId;
 pub type TokenId = U256;
@@ -14,14 +14,6 @@ pub struct InitMarket {
     pub treasury_fee: u8,
 }
 
-#[derive(Debug, Encode, Decode, TypeInfo, Clone)]
-pub struct Offer {
-    pub hash: H256,
-    pub id: ActorId,
-    pub ft_contract_id: Option<ActorId>,
-    pub price: u128,
-}
-
 #[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
 pub struct Auction {
     pub bid_period: u64,
@@ -29,7 +21,30 @@ pub struct Auction {
     pub ended_at: u64,
     pub current_price: Price,
     pub current_winner: ActorId,
-    pub transaction: Option<(ActorId, Price, TransactionId)>,
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo, Clone, PartialEq, Eq)]
+pub enum MarketTx {
+    CreateAuction,
+    Bid {
+        account: ActorId,
+        price: Price,
+    },
+    SettleAuction,
+    Sale {
+        buyer: ActorId,
+    },
+    Offer {
+        ft_id: ContractId,
+        price: Price,
+        account: ActorId,
+    },
+    AcceptOffer,
+    Withdraw {
+        ft_id: ContractId,
+        price: Price,
+        account: ActorId,
+    },
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo, Clone, Default)]
@@ -40,7 +55,7 @@ pub struct Item {
     pub auction: Option<Auction>,
     pub offers: BTreeMap<(Option<ContractId>, Price), ActorId>,
     pub bids: BTreeMap<(Option<ContractId>, Price), ActorId>,
-    pub transaction_id: Option<TransactionId>,
+    pub tx: Option<(TransactionId, MarketTx)>,
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
@@ -195,6 +210,8 @@ pub enum MarketAction {
     Withdraw {
         /// the NFT contract address
         nft_contract_id: ContractId,
+        /// the FT contract address (if it is `None, the offer is made for the native value)
+        ft_contract_id: Option<ContractId>,
         /// the NFT id
         token_id: TokenId,
         /// The offered price (native value)
@@ -282,4 +299,13 @@ pub enum MarketEvent {
     TransactionFailed,
     RerunTransaction,
     TransferValue,
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo)]
+pub enum MarketErr {
+    NFTTransferFailed,
+    TokenTransferFailed,
+    WrongTransaction,
+    RerunTransaction,
+    WrongPrice,
 }

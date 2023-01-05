@@ -53,7 +53,7 @@ pub async fn get_owner(nft_contract_id: &ContractId, token_id: TokenId) -> Actor
             .await
             .expect("Unable to decode `NFTEvent`");
     match reply {
-        NFTEvent::Owner { owner, token_id } => owner,
+        NFTEvent::Owner { owner, token_id: _ } => owner,
         _ => panic!("Wrong received message"),
     }
 }
