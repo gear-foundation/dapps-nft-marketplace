@@ -1,8 +1,9 @@
-use crate::{ContractId, TokenId, TransactionId};
 use gstd::{msg, prelude::*, ActorId};
-use primitive_types::U256;
-pub type Payout = BTreeMap<ActorId, u128>;
+use market_io::{ContractId, TokenId, TransactionId};
 use nft_io::*;
+use primitive_types::U256;
+
+pub type Payout = BTreeMap<ActorId, u128>;
 
 pub async fn nft_transfer(
     transaction_id: TransactionId,

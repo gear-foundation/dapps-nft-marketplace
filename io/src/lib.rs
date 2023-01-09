@@ -1,11 +1,37 @@
 #![no_std]
+
+use gmeta::{In, InOut, Metadata};
 use gstd::{prelude::*, ActorId};
-use primitive_types::{U256};
+use primitive_types::U256;
 
 pub type ContractId = ActorId;
 pub type TokenId = U256;
 pub type Price = u128;
 pub type TransactionId = u64;
+
+pub struct MarketMetadata;
+
+impl Metadata for MarketMetadata {
+    type Init = In<InitMarket>;
+    type Handle = InOut<MarketAction, MarketEvent>;
+    type Others = ();
+    type Reply = ();
+    type Signal = ();
+    type State = Market;
+}
+
+#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct Market {
+    pub admin_id: ActorId,
+    pub treasury_id: ActorId,
+    pub treasury_fee: u8,
+    pub items: BTreeMap<(ContractId, TokenId), Item>,
+    pub approved_nft_contracts: BTreeSet<ActorId>,
+    pub approved_ft_contracts: BTreeSet<ActorId>,
+    pub tx_id: TransactionId,
+}
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub struct InitMarket {
@@ -305,4 +331,16 @@ pub enum MarketErr {
     WrongTransaction,
     RerunTransaction,
     WrongPrice,
+}
+
+pub fn all_items(state: <MarketMetadata as Metadata>::State) -> Vec<Item> {
+    state.items.values().cloned().collect()
+}
+
+pub fn item_info(
+    state: <MarketMetadata as Metadata>::State,
+    nft_contract_id: &ActorId,
+    token_id: U256,
+) -> Option<Item> {
+    state.items.get(&(*nft_contract_id, token_id)).cloned()
 }

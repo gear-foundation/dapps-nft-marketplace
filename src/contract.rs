@@ -1,36 +1,34 @@
-#![no_std]
-
-#[cfg(not(feature = "binary-vendor"))]
-mod auction;
-mod contract;
-mod nft_messages;
-mod offers;
-mod payment;
-mod sale;
+use crate::{auction::*, nft_messages::*, offers::*, sale::*};
+use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
+use market_io::*;
 
 pub type ContractAndTokenId = String;
 
-const MIN_TREASURY_FEE: u16 = 0;
-const MAX_TREASURT_FEE: u16 = 5;
-pub const BASE_PERCENT: u16 = 100;
+const MIN_TREASURY_FEE: u8 = 0;
+const MAX_TREASURT_FEE: u8 = 5;
+pub const BASE_PERCENT: u8 = 100;
 pub const MINIMUM_VALUE: u64 = 500;
-
-#[derive(Debug, Default, Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
-pub struct Market {
-    pub admin_id: ActorId,
-    pub treasury_id: ActorId,
-    pub treasury_fee: u16,
-    pub items: BTreeMap<(ContractId, TokenId), Item>,
-    pub approved_nft_contracts: BTreeSet<ActorId>,
-    pub approved_ft_contracts: BTreeSet<ActorId>,
-    pub tx_id: TransactionId,
-}
 
 static mut MARKET: Option<Market> = None;
 
-impl Market {
+#[async_trait::async_trait]
+pub trait MarketHandler {
+    fn add_nft_contract(&mut self, nft_contract_id: &ContractId) -> Result<MarketEvent, MarketErr>;
+    fn add_ft_contract(&mut self, ft_contract_id: &ContractId) -> Result<MarketEvent, MarketErr>;
+    async fn add_market_data(
+        &mut self,
+        nft_contract_id: &ContractId,
+        ft_contract_id: Option<ContractId>,
+        token_id: TokenId,
+        price: Option<Price>,
+    ) -> Result<MarketEvent, MarketErr>;
+    fn check_admin(&self);
+    fn check_approved_nft_contract(&self, nft_contract_id: &ActorId);
+    fn check_approved_ft_contract(&self, ft_contract_id: Option<ActorId>);
+}
+
+#[async_trait::async_trait]
+impl MarketHandler for Market {
     fn add_nft_contract(&mut self, nft_contract_id: &ContractId) -> Result<MarketEvent, MarketErr> {
         self.check_admin();
         self.approved_nft_contracts.insert(*nft_contract_id);
@@ -43,7 +41,7 @@ impl Market {
         Ok(MarketEvent::FtContractAdded(*ft_contract_id))
     }
 
-    pub async fn add_market_data(
+    async fn add_market_data(
         &mut self,
         nft_contract_id: &ContractId,
         ft_contract_id: Option<ContractId>,
@@ -72,29 +70,31 @@ impl Market {
                 price,
                 auction: None,
                 offers: BTreeMap::new(),
+                bids: BTreeMap::new(),
                 tx: None,
             });
 
         Ok(MarketEvent::MarketDataAdded {
             nft_contract_id: *nft_contract_id,
+            owner: msg::source(),
             token_id,
             price,
         })
     }
 
-    pub fn check_admin(&self) {
+    fn check_admin(&self) {
         if msg::source() != self.admin_id {
             panic!("Only owner can make that action");
         }
     }
 
-    pub fn check_approved_nft_contract(&self, nft_contract_id: &ActorId) {
+    fn check_approved_nft_contract(&self, nft_contract_id: &ActorId) {
         if !self.approved_nft_contracts.contains(nft_contract_id) {
             panic!("that nft contract is not approved");
         }
     }
 
-    pub fn check_approved_ft_contract(&self, ft_contract_id: Option<ActorId>) {
+    fn check_approved_ft_contract(&self, ft_contract_id: Option<ActorId>) {
         if ft_contract_id.is_some()
             && !self
                 .approved_ft_contracts
@@ -186,8 +186,7 @@ async fn main() {
             token_id,
         } => market.settle_auction(&nft_contract_id, token_id).await,
     };
-    reply(result)
-        .expect("Failed to encode or reply with `Result<MarketEvent, MarketErr>`");
+    reply(result).expect("Failed to encode or reply with `Result<MarketEvent, MarketErr>`");
 }
 
 #[no_mangle]
@@ -205,36 +204,22 @@ extern "C" fn init() {
     unsafe { MARKET = Some(market) };
 }
 
-gstd::metadata! {
-title: "NFTMarketplace",
-    init:
-        input: InitMarket,
-    handle:
-        input: MarketAction,
-        output: MarketEvent,
-    state:
-        input: State,
-        output: StateReply,
+#[no_mangle]
+extern "C" fn metahash() {
+    let metahash: [u8; 32] = include!("../.metahash");
+    msg::reply(metahash, 0).expect("Failed to share metahash");
 }
 
 #[no_mangle]
-extern "C" fn meta_state() -> *mut [i32; 2] {
-    let state: State = msg::load().expect("failed to decode input argument");
-    let market: &mut Market = unsafe { MARKET.get_or_insert(Market::default()) };
-    let encoded = match state {
-        State::AllItems => StateReply::AllItems(market.items.values().cloned().collect()).encode(),
-        State::ItemInfo {
-            nft_contract_id,
-            token_id,
-        } => {
-            if let Some(item) = market.items.get(&(nft_contract_id, token_id)) {
-                StateReply::ItemInfo(item.clone()).encode()
-            } else {
-                StateReply::ItemInfo(Item::default()).encode()
-            }
-        }
-    };
-    gstd::util::to_leak_ptr(encoded)
+extern "C" fn state() {
+    msg::reply(
+        unsafe {
+            let market = MARKET.as_ref().expect("Uninitialized market state");
+            &(*market).clone()
+        },
+        0,
+    )
+    .expect("Failed to share state");
 }
 
 fn reply(payload: impl Encode) -> GstdResult<MessageId> {

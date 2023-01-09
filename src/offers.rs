@@ -1,11 +1,40 @@
 use crate::{
-    nft_messages::*, payment::*, ContractId, Item, Market, MarketErr, MarketEvent,
-    MarketTx, Price, TokenId, TransactionId, BASE_PERCENT, MINIMUM_VALUE,
+    contract::{MarketHandler, BASE_PERCENT, MINIMUM_VALUE},
+    nft_messages::*,
+    payment::*,
 };
 use gstd::{exec, debug,msg, prelude::*, ActorId};
 
-impl Market {
-    pub async fn add_offer(
+#[async_trait::async_trait]
+pub trait MarketOffersHandler {
+    async fn add_offer(
+        &mut self,
+        nft_contract_id: &ContractId,
+        ft_contract_id: Option<ContractId>,
+        token_id: TokenId,
+        price: Price,
+    ) -> Result<MarketEvent, MarketErr>;
+
+    async fn accept_offer(
+        &mut self,
+        nft_contract_id: &ContractId,
+        token_id: TokenId,
+        ft_contract_id: Option<ContractId>,
+        price: Price,
+    ) -> Result<MarketEvent, MarketErr>;
+
+    async fn withdraw(
+        &mut self,
+        nft_contract_id: &ContractId,
+        token_id: TokenId,
+        ft_contract_id: Option<ContractId>,
+        price: Price,
+    ) -> Result<MarketEvent, MarketErr>;
+}
+
+#[async_trait::async_trait]
+impl MarketOffersHandler for Market {
+    async fn add_offer(
         &mut self,
         nft_contract_id: &ContractId,
         ft_contract_id: Option<ContractId>,
@@ -83,7 +112,7 @@ impl Market {
         add_offer_tx(tx_id, item, nft_contract_id, &ft_id, token_id, price).await
     }
 
-    pub async fn accept_offer(
+    async fn accept_offer(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
@@ -153,7 +182,7 @@ impl Market {
         .await
     }
 
-    pub async fn withdraw(
+    async fn withdraw(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
@@ -272,7 +301,7 @@ async fn add_offer_tx(
     })
 }
 
-#[allow(clippy::too_many_arguments)] 
+#[allow(clippy::too_many_arguments)]
 async fn accept_offer_tx(
     mut tx_id: TransactionId,
     item: &mut Item,

@@ -1,6 +1,6 @@
 use ft_logic_io::Action;
 use ft_main_io::{FTokenAction, FTokenEvent};
-use gstd::{ msg, prelude::*, ActorId};
+use gstd::{msg, prelude::*, ActorId};
 
 pub async fn transfer_tokens(
     transaction_id: u64,

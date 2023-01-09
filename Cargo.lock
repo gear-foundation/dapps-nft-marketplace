@@ -50,12 +50,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
+name = "async-trait"
+version = "0.1.61"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "705339e0e4a9690e2908d2b3d049d85682cf19fbd5782494498fbf7003a6a282"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
 dependencies = [
- "hermit-abi",
+ "hermit-abi 0.1.19",
  "libc",
  "winapi",
 ]
@@ -123,9 +134,9 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "camino"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88ad0e1e3e88dd237a156ab9f571021b8a158caa0ae44b1968a241efb5144c1e"
+checksum = "c77df041dc383319cc661b428b6961a005db4d6808d5e12536931b1ca9556055"
 dependencies = [
  "serde",
 ]
@@ -152,6 +163,12 @@ dependencies = [
  "serde_json",
  "thiserror",
 ]
+
+[[package]]
+name = "cc"
+version = "1.0.78"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a20104e2335ce8a659d6dd92a51a767a0c062599c73b343fd152cb401e828c3d"
 
 [[package]]
 name = "cfg-if"
@@ -262,11 +279,32 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
 dependencies = [
- "atty",
  "humantime",
+ "is-terminal",
  "log",
  "regex",
  "termcolor",
+]
+
+[[package]]
+name = "errno"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f639046355ee4f37944e44f60642c6f3a7efa3cf6b78c78a0d989a8ce6c396a1"
+dependencies = [
+ "errno-dragonfly",
+ "libc",
+ "winapi",
+]
+
+[[package]]
+name = "errno-dragonfly"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
+dependencies = [
+ "cc",
+ "libc",
 ]
 
 [[package]]
@@ -393,7 +431,8 @@ source = "git+https://github.com/gear-tech/gear.git?branch=stable#ec8de75d6001cd
 dependencies = [
  "derive_more",
  "gear-core",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git)",
+ "gear-wasm-instrument",
  "log",
  "parity-scale-codec",
  "scale-info",
@@ -408,7 +447,7 @@ dependencies = [
  "derive_more",
  "gear-backend-common",
  "gear-core",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git)",
  "gear-wasm-instrument",
  "gsys",
  "log",
@@ -423,8 +462,9 @@ source = "git+https://github.com/gear-tech/gear.git?branch=stable#ec8de75d6001cd
 dependencies = [
  "blake2-rfc",
  "derive_more",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git)",
  "gear-wasm-instrument",
+ "hashbrown",
  "hex",
  "log",
  "parity-scale-codec",
@@ -451,9 +491,23 @@ dependencies = [
  "derive_more",
  "gear-backend-common",
  "gear-core",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git)",
+ "gear-wasm-instrument",
  "log",
  "parity-scale-codec",
+ "scale-info",
+ "static_assertions",
+]
+
+[[package]]
+name = "gear-lib"
+version = "0.3.2"
+source = "git+https://github.com/gear-dapps/gear-lib.git?tag=0.3.2#f78b0e3b9b0a13a3a2ed25710dbc6ad9e99d4257"
+dependencies = [
+ "gear-lib-sr25519 0.3.2",
+ "gstd",
+ "parity-scale-codec",
+ "primitive-types",
  "scale-info",
 ]
 
@@ -505,6 +559,7 @@ dependencies = [
  "anyhow",
  "cargo_metadata",
  "colored",
+ "gmeta",
  "log",
  "pathdiff",
  "pwasm-utils",
@@ -518,6 +573,7 @@ name = "gear-wasm-instrument"
 version = "0.1.0"
 source = "git+https://github.com/gear-tech/gear.git?branch=stable#ec8de75d6001cdd477ac2a7e0251fe24c947c232"
 dependencies = [
+ "enum-iterator",
  "wasm-instrument",
 ]
 
@@ -551,7 +607,7 @@ dependencies = [
  "futures",
  "galloc",
  "gcore",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git?branch=stable)",
  "gstd-codegen",
  "hex",
  "parity-scale-codec",
@@ -587,7 +643,7 @@ dependencies = [
  "gear-backend-common",
  "gear-backend-wasmi",
  "gear-core",
- "gear-core-errors",
+ "gear-core-errors 0.1.0 (git+https://github.com/gear-tech/gear.git)",
  "gear-core-processor",
  "gear-wasm-builder",
  "gear-wasm-instrument",
@@ -612,6 +668,15 @@ name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "hermit-abi"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee512640fe35acbfb4bb779db6f0d80704c2cacfa2e39b601ef3e3f47d1ae4c7"
 dependencies = [
  "libc",
 ]
@@ -717,11 +782,22 @@ dependencies = [
 name = "market-io"
 version = "0.1.1"
 dependencies = [
+ "gmeta",
  "gstd",
  "nft-io 0.2.4",
  "parity-scale-codec",
  "primitive-types",
  "scale-info",
+]
+
+[[package]]
+name = "market-state"
+version = "0.1.0"
+dependencies = [
+ "gear-wasm-builder",
+ "gmeta",
+ "gstd",
+ "market-io",
 ]
 
 [[package]]
@@ -772,6 +848,7 @@ dependencies = [
 name = "nft-marketplace"
 version = "0.1.1"
 dependencies = [
+ "async-trait",
  "ft-logic-io",
  "ft-main-io",
  "gear-lib 0.3.4",

@@ -1,15 +1,39 @@
 use crate::{
-    nft_messages::{nft_transfer, Payout},
+    contract::{MarketHandler, BASE_PERCENT, MINIMUM_VALUE},
+    nft_messages::{nft_transfer, payouts, Payout},
     payment::transfer_tokens,
-    payouts,
-    Market, MarketEvent, BASE_PERCENT, MINIMUM_VALUE,
 };
 use gstd::{exec, debug, msg, prelude::*, ActorId};
 use market_io::*;
 const MIN_BID_PERIOD: u64 = 60_000;
 
-impl Market {
-    pub async fn create_auction(
+#[async_trait::async_trait]
+pub trait MarketAuctionHandler {
+    async fn create_auction(
+        &mut self,
+        nft_contract_id: &ContractId,
+        ft_contract_id: Option<ContractId>,
+        token_id: TokenId,
+        min_price: Price,
+        bid_period: u64,
+        duration: u64,
+    ) -> Result<MarketEvent, MarketErr>;
+    async fn settle_auction(
+        &mut self,
+        nft_contract_id: &ContractId,
+        token_id: TokenId,
+    ) -> Result<MarketEvent, MarketErr>;
+    async fn add_bid(
+        &mut self,
+        nft_contract_id: &ContractId,
+        token_id: TokenId,
+        price: Price,
+    ) -> Result<MarketEvent, MarketErr>;
+}
+
+#[async_trait::async_trait]
+impl MarketAuctionHandler for Market {
+    async fn create_auction(
         &mut self,
         nft_contract_id: &ContractId,
         ft_contract_id: Option<ContractId>,
@@ -88,7 +112,7 @@ impl Market {
     /// On success auction replies [`MarketEvent::AuctionSettled`].
     /// If no bids were made replies [`MarketEvent::AuctionCancelled`].
     #[allow(unused_must_use)]
-    pub async fn settle_auction(
+    async fn settle_auction(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
@@ -161,7 +185,7 @@ impl Market {
         settle_auction_tx(tx_id, item, &payouts, nft_contract_id, token_id, price).await
     }
 
-    pub async fn add_bid(
+    async fn add_bid(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
@@ -247,7 +271,7 @@ impl Market {
     }
 }
 
-#[allow(clippy::too_many_arguments)] 
+#[allow(clippy::too_many_arguments)]
 async fn create_auction_tx(
     tx_id: TransactionId,
     item: &mut Item,

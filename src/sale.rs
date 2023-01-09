@@ -1,11 +1,22 @@
 use crate::{
-    nft_messages::*, payment::*, ContractId, Item, Market, MarketErr, MarketEvent, MarketTx,
-    TokenId, TransactionId, BASE_PERCENT, MINIMUM_VALUE,
+    contract::{BASE_PERCENT, MINIMUM_VALUE},
+    nft_messages::*,
+    payment::*,
 };
 use gstd::{exec, debug, msg, prelude::*, ActorId};
 
-impl Market {
-    pub async fn buy_item(
+#[async_trait::async_trait]
+pub trait MarketSaleHandler {
+    async fn buy_item(
+        &mut self,
+        nft_contract_id: &ContractId,
+        token_id: TokenId,
+    ) -> Result<MarketEvent, MarketErr>;
+}
+
+#[async_trait::async_trait]
+impl MarketSaleHandler for Market {
+    async fn buy_item(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
