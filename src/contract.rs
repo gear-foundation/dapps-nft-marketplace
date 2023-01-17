@@ -2,8 +2,6 @@ use crate::{auction::*, nft_messages::*, offers::*, sale::*};
 use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
 use market_io::*;
 
-pub type ContractAndTokenId = String;
-
 const MIN_TREASURY_FEE: u8 = 0;
 const MAX_TREASURT_FEE: u8 = 5;
 pub const BASE_PERCENT: u8 = 100;
