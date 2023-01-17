@@ -6,17 +6,35 @@ license = "MIT"
 authors = ["Gear Technologies"]
 
 [dependencies]
+# TODO: pin to the "stable" branch before the merge.
 gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "stable" }
 primitive-types = { version = "0.12.1", default-features = false, features = ["scale-info"] }
 nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.7" }
 market-io = { path = "io" }
 sp-core-hashing = { version = "4.0.0", default-features = false }
-ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", branch = "lm-new-meta" }
-ft-logic-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", branch = "lm-new-meta"  }
+ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git" }
+ft-logic-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git" }
 gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.4" }
+async-trait = "0.1.60"
 
 [dev-dependencies]
-gtest = { git = "https://github.com/gear-tech/gear.git" , branch = "stable"}
+gtest = { git = "https://github.com/gear-tech/gear.git" }
 
 [build-dependencies]
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }
+market-io = { path = "io" }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
+
+[features]
+# Used for inserting constants with WASM binaries (NOT paths) of the contract in
+# the root crate. Usually these constants used in gclient tests instead of
+# strings with paths to the binaries in the "target" directory. If you don't
+# like this approach or don't use gclient tests, you can freely remove this
+# feature from here and from the rest of the code.
+binary-vendor = []
+
+# It's necessary to include all metawasm crates in the workspace section,
+# otherwise they'll be ignored by Cargo and won't be built.
+[workspace]
+members = [
+    "state"
+]

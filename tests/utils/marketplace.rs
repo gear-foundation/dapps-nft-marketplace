@@ -1,8 +1,7 @@
-use super::{prelude::*, RunResult, MetaStateReply};
+use super::{prelude::*, MetaStateReply, RunResult};
 use gstd::ActorId;
 use gtest::{Program as InnerProgram, System};
-use market_io::{InitMarket, MarketAction, MarketEvent};
-use nft_marketplace::state::{State, StateReply};
+use market_io::*;
 
 pub struct Market<'a>(InnerProgram<'a>);
 
@@ -47,11 +46,15 @@ impl<'a> Market<'a> {
         RunResult::new(
             self.0
                 .send(from, MarketAction::AddNftContract(nft_contract_id)),
-            |nft_contract_id| MarketEvent::NftContractAdded(nft_contract_id),
+            MarketEvent::NftContractAdded,
         )
     }
 
-    pub fn add_ft_contract(&self, from: u64, ft_contract_id: ActorId) -> MarketRunResult<ContractId> {
+    pub fn add_ft_contract(
+        &self,
+        from: u64,
+        ft_contract_id: ActorId,
+    ) -> MarketRunResult<ContractId> {
         RunResult::new(
             self.0
                 .send(from, MarketAction::AddFTContract(ft_contract_id)),
@@ -61,7 +64,7 @@ impl<'a> Market<'a> {
 
     pub fn add_market_data(
         &self,
-        sys: &System,
+        _sys: &System,
         from: u64,
         nft_contract_id: ActorId,
         ft_contract_id: Option<ActorId>,
@@ -194,7 +197,7 @@ impl<'a> Market<'a> {
 
     pub fn create_auction(
         &self,
-        sys: &System,
+        _sys: &System,
         from: u64,
         (nft_contract_id, token_id, ft_contract_id): (ContractId, TokenId, Option<ContractId>),
         min_price: u128,
@@ -269,21 +272,15 @@ impl<'a> Market<'a> {
 pub struct MarketMetaState<'a>(&'a InnerProgram<'a>);
 
 impl MarketMetaState<'_> {
-    pub fn item_info(self, nft_contract_id: ContractId, token_id: TokenId) -> MetaStateReply<Item> {
-        if let StateReply::ItemInfo(item) = self
-            .0
-            .meta_state(State::ItemInfo {
-                nft_contract_id,
-                token_id,
-            })
-            .unwrap()
-        {
-            MetaStateReply(item)
-        } else {
-            unreachable!();
-        }
+    pub fn item_info(
+        self,
+        _nft_contract_id: ContractId,
+        _token_id: TokenId,
+    ) -> MetaStateReply<Item> {
+        unreachable!();
     }
 }
+
 pub struct MarketInit<'a>(InnerProgram<'a>, bool);
 
 impl<'a> MarketInit<'a> {

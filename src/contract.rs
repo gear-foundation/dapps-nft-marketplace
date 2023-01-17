@@ -1,10 +1,12 @@
-use crate::{auction::*, nft_messages::*, offers::*, sale::*};
+use crate::{
+    auction::AuctionHandler, nft_messages::get_owner, offers::OffersHandler, sale::SaleHandler,
+};
 use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
 use market_io::*;
 
-const MIN_TREASURY_FEE: u8 = 0;
-const MAX_TREASURT_FEE: u8 = 5;
-pub const BASE_PERCENT: u8 = 100;
+const MIN_TREASURY_FEE: u16 = 0;
+const MAX_TREASURT_FEE: u16 = 5;
+pub const BASE_PERCENT: u16 = 100;
 pub const MINIMUM_VALUE: u64 = 500;
 
 static mut MARKET: Option<Market> = None;
@@ -12,7 +14,9 @@ static mut MARKET: Option<Market> = None;
 #[async_trait::async_trait]
 pub trait MarketHandler {
     fn add_nft_contract(&mut self, nft_contract_id: &ContractId) -> Result<MarketEvent, MarketErr>;
+
     fn add_ft_contract(&mut self, ft_contract_id: &ContractId) -> Result<MarketEvent, MarketErr>;
+
     async fn add_market_data(
         &mut self,
         nft_contract_id: &ContractId,
@@ -20,8 +24,11 @@ pub trait MarketHandler {
         token_id: TokenId,
         price: Option<Price>,
     ) -> Result<MarketEvent, MarketErr>;
+
     fn check_admin(&self);
+
     fn check_approved_nft_contract(&self, nft_contract_id: &ActorId);
+
     fn check_approved_ft_contract(&self, ft_contract_id: Option<ActorId>);
 }
 
@@ -68,13 +75,11 @@ impl MarketHandler for Market {
                 price,
                 auction: None,
                 offers: BTreeMap::new(),
-                bids: BTreeMap::new(),
                 tx: None,
             });
 
         Ok(MarketEvent::MarketDataAdded {
             nft_contract_id: *nft_contract_id,
-            owner: msg::source(),
             token_id,
             price,
         })

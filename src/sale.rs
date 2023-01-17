@@ -3,10 +3,13 @@ use crate::{
     nft_messages::*,
     payment::*,
 };
-use gstd::{exec, debug, msg, prelude::*, ActorId};
+use gstd::{debug, exec, msg, prelude::*, ActorId};
+use market_io::{
+    ContractId, Item, Market, MarketErr, MarketEvent, MarketTx, TokenId, TransactionId,
+};
 
 #[async_trait::async_trait]
-pub trait MarketSaleHandler {
+pub trait SaleHandler {
     async fn buy_item(
         &mut self,
         nft_contract_id: &ContractId,
@@ -15,7 +18,7 @@ pub trait MarketSaleHandler {
 }
 
 #[async_trait::async_trait]
-impl MarketSaleHandler for Market {
+impl SaleHandler for Market {
     async fn buy_item(
         &mut self,
         nft_contract_id: &ContractId,
@@ -28,8 +31,8 @@ impl MarketSaleHandler for Market {
             .get_mut(&contract_and_token_id)
             .expect("Item does not exist");
 
-        if let Some(auction) = item.auction {
-            return 
+        if item.auction.is_some() {
+            return Err(MarketErr::ItemOnAuction);
         }
         assert!(item.auction.is_none(), "There is an opened auction");
 

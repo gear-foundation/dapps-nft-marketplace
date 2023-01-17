@@ -3,12 +3,13 @@ use crate::{
     nft_messages::{nft_transfer, payouts, Payout},
     payment::transfer_tokens,
 };
-use gstd::{exec, debug, msg, prelude::*, ActorId};
-use market_io::*;
+use gstd::{exec, msg, prelude::*, ActorId};
+use market_io::{Market, MarketEvent, *};
+
 const MIN_BID_PERIOD: u64 = 60_000;
 
 #[async_trait::async_trait]
-pub trait MarketAuctionHandler {
+pub trait AuctionHandler {
     async fn create_auction(
         &mut self,
         nft_contract_id: &ContractId,
@@ -18,11 +19,25 @@ pub trait MarketAuctionHandler {
         bid_period: u64,
         duration: u64,
     ) -> Result<MarketEvent, MarketErr>;
+
+    /// Settles the auction.
+    ///
+    /// Requirements:
+    /// * The auction must be over.
+    ///
+    /// Arguments:
+    /// * `nft_contract_id`: the NFT contract address
+    /// * `token_id`: the NFT id
+    ///
+    /// On success auction replies [`MarketEvent::AuctionSettled`].
+    /// If no bids were made replies [`MarketEvent::AuctionCancelled`].
+    #[allow(unused_must_use)]
     async fn settle_auction(
         &mut self,
         nft_contract_id: &ContractId,
         token_id: TokenId,
     ) -> Result<MarketEvent, MarketErr>;
+
     async fn add_bid(
         &mut self,
         nft_contract_id: &ContractId,
@@ -32,7 +47,7 @@ pub trait MarketAuctionHandler {
 }
 
 #[async_trait::async_trait]
-impl MarketAuctionHandler for Market {
+impl AuctionHandler for Market {
     async fn create_auction(
         &mut self,
         nft_contract_id: &ContractId,
@@ -119,7 +134,6 @@ impl MarketAuctionHandler for Market {
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
 
-        
         let item = self
             .items
             .get_mut(&contract_and_token_id)
@@ -211,8 +225,12 @@ impl MarketAuctionHandler for Market {
                     "Cant offer less or equal to the current bid price"
                 );
                 assert!(msg::value() == price, "Not enough attached value");
-                msg::send(auction.current_winner, MarketEvent::TransferValue, auction.current_price)
-                    .expect("Error in sending value");
+                msg::send(
+                    auction.current_winner,
+                    MarketEvent::TransferValue,
+                    auction.current_price,
+                )
+                .expect("Error in sending value");
                 auction.current_price = price;
                 auction.current_winner = msg::source();
                 return Ok(MarketEvent::BidAdded {
@@ -246,7 +264,6 @@ impl MarketAuctionHandler for Market {
                 }
             }
         }
-
 
         let tx_id = self.tx_id;
         self.tx_id = self.tx_id.wrapping_add(2);
@@ -328,7 +345,14 @@ async fn add_bid_tx(
     }
 
     tx_id += 1;
-    if  !auction.current_winner.is_zero() && transfer_tokens(tx_id, ft_contract_id, &exec::program_id(), &auction.current_winner, auction.current_price)
+    if !auction.current_winner.is_zero()
+        && transfer_tokens(
+            tx_id,
+            ft_contract_id,
+            &exec::program_id(),
+            &auction.current_winner,
+            auction.current_price,
+        )
         .await
         .is_err()
     {
@@ -338,7 +362,7 @@ async fn add_bid_tx(
     item.tx = None;
     auction.current_price = price;
     auction.current_winner = *account;
-   
+
     Ok(MarketEvent::BidAdded {
         nft_contract_id: *nft_contract_id,
         token_id,

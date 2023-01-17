@@ -1,12 +1,9 @@
 use super::{prelude::*, MetaStateReply};
-use gear_lib::non_fungible_token::{
-    io::*,
-    state::{NFTQuery, NFTQueryReply},
-    token::Token,
-};
+use gear_lib::non_fungible_token::{io::*, token::Token};
 
 use gstd::ActorId;
 use gtest::{Log, Program as InnerProgram, System};
+use market_io::*;
 use nft_io::{InitNFT, NFTAction, NFTEvent};
 
 pub struct NonFungibleToken<'a>(InnerProgram<'a>);
@@ -19,8 +16,7 @@ impl Program for NonFungibleToken<'_> {
 
 impl<'a> NonFungibleToken<'a> {
     pub fn initialize(system: &'a System) -> Self {
-        let program =
-            InnerProgram::from_file(system, "./target/nft.wasm");
+        let program = InnerProgram::from_file(system, "./target/nft.wasm");
 
         assert!(!program
             .send(
@@ -47,15 +43,11 @@ impl<'a> NonFungibleToken<'a> {
                     token_metadata: Default::default()
                 }
             )
-            .contains(
-                &Log::builder().payload(
-                    NFTEvent::Transfer(NFTTransfer {
-                        from: ActorId::zero(),
-                        to: from.into(),
-                        token_id: TOKEN_ID.into(),
-                    })
-                )
-            ));
+            .contains(&Log::builder().payload(NFTEvent::Transfer(NFTTransfer {
+                from: ActorId::zero(),
+                to: from.into(),
+                token_id: TOKEN_ID.into(),
+            }))));
     }
 
     pub fn approve(&self, transaction_id: u64, from: u64, to: ActorId, token_id: TokenId) {
@@ -69,15 +61,11 @@ impl<'a> NonFungibleToken<'a> {
                     token_id
                 }
             )
-            .contains(
-                &Log::builder().payload(
-                    NFTEvent::Approval(NFTApproval {
-                        owner: from.into(),
-                        approved_account: to,
-                        token_id: TOKEN_ID.into(),
-                    }
-                ))
-            ));
+            .contains(&Log::builder().payload(NFTEvent::Approval(NFTApproval {
+                owner: from.into(),
+                approved_account: to,
+                token_id: TOKEN_ID.into(),
+            }))));
     }
 
     pub fn meta_state(&self) -> NonFungibleTokenMetaState {
@@ -92,17 +80,7 @@ impl NonFungibleTokenMetaState<'_> {
         MetaStateReply(self.token(token_id).0.owner_id)
     }
 
-    pub fn token(self, token_id: u64) -> MetaStateReply<Token> {
-        if let NFTQueryReply::Token { token: reply } = self
-            .0
-            .meta_state(NFTQuery::Token {
-                token_id: token_id.into(),
-            })
-            .unwrap()
-        {
-            MetaStateReply(reply)
-        } else {
-            unreachable!();
-        }
+    pub fn token(self, _token_id: u64) -> MetaStateReply<Token> {
+        unreachable!()
     }
 }

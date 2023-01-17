@@ -1,10 +1,12 @@
 use super::prelude::*;
 use super::{FungibleToken, Market, NonFungibleToken};
+
+use convert::identity;
 use core::fmt::Debug;
 use gstd::ActorId;
 use gtest::{Log, Program as InnerProgram, RunResult as InnerRunResult, System};
 use marker::PhantomData;
-use convert::identity;
+use market_io::*;
 
 pub fn initialize_system() -> System {
     let system = System::new();
@@ -14,7 +16,7 @@ pub fn initialize_system() -> System {
 
 pub fn initialize_programs(system: &System) -> (FungibleToken, NonFungibleToken, Market) {
     let ft_program = FungibleToken::initialize(system);
-    
+
     let mut tx_id: u64 = 0;
     let nft_program = NonFungibleToken::initialize(system);
     nft_program.mint(tx_id, SELLER);

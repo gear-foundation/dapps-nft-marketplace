@@ -3,10 +3,13 @@ use crate::{
     nft_messages::*,
     payment::*,
 };
-use gstd::{exec, debug,msg, prelude::*, ActorId};
+use gstd::{debug, exec, msg, prelude::*, ActorId};
+use market_io::{
+    ContractId, Item, Market, MarketErr, MarketEvent, MarketTx, Price, TokenId, TransactionId,
+};
 
 #[async_trait::async_trait]
-pub trait MarketOffersHandler {
+pub trait OffersHandler {
     async fn add_offer(
         &mut self,
         nft_contract_id: &ContractId,
@@ -33,7 +36,7 @@ pub trait MarketOffersHandler {
 }
 
 #[async_trait::async_trait]
-impl MarketOffersHandler for Market {
+impl OffersHandler for Market {
     async fn add_offer(
         &mut self,
         nft_contract_id: &ContractId,

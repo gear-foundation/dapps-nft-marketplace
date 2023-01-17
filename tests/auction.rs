@@ -1,4 +1,6 @@
 pub mod utils;
+
+use market_io::*;
 use utils::prelude::*;
 
 #[test]
@@ -16,11 +18,7 @@ fn auction_with_native_tokens() {
             TOKEN_ID.into(),
             None,
         )
-        .succeed((
-            nft_program.actor_id(),
-            TOKEN_ID.into(),
-            None,
-        ));
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
     market
         .create_auction(
@@ -57,7 +55,7 @@ fn auction_with_native_tokens() {
     }
 
     let winner_price = 6 * NFT_PRICE;
-    let winner = PARTICIPANTS[4];
+    let _winner = PARTICIPANTS[4];
 
     // check balance of nft marketplace contract
     assert_eq!(system.balance_of(MARKET_ID), winner_price);
@@ -112,10 +110,7 @@ fn auction_with_native_tokens() {
 
     // check balance of SELLER
     system.claim_value_from_mailbox(SELLER);
-    assert_eq!(
-        system.balance_of(SELLER),
-        winner_price - treasury_fee
-    );
+    assert_eq!(system.balance_of(SELLER), winner_price - treasury_fee);
 
     // check balance of TREASURY_ID
     system.claim_value_from_mailbox(TREASURY_ID);
@@ -137,11 +132,7 @@ fn cancelled_auction() {
             TOKEN_ID.into(),
             None,
         )
-        .succeed((
-            nft_program.actor_id(),
-            TOKEN_ID.into(),
-            None,
-        ));
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
     market
         .create_auction(
@@ -173,17 +164,13 @@ fn auction_with_fungible_tokens() {
     market
         .add_market_data(
             &system,
-           SELLER,
+            SELLER,
             nft_program.actor_id(),
             Some(ft_program.actor_id()),
             TOKEN_ID.into(),
             None,
         )
-        .succeed((
-            nft_program.actor_id(),
-            TOKEN_ID.into(),
-            None,
-        ));
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
     market
         .create_auction(
@@ -205,7 +192,7 @@ fn auction_with_fungible_tokens() {
         let bid_price = (i as u128 + 2) * NFT_PRICE;
         ft_program.approve(tx_id, participant, market.actor_id(), bid_price);
         tx_id += 1;
-        ft_program.mint(tx_id,participant, bid_price);
+        ft_program.mint(tx_id, participant, bid_price);
         market
             .add_bid(
                 participant,
@@ -225,7 +212,7 @@ fn auction_with_fungible_tokens() {
     }
 
     let winner_price = 6 * NFT_PRICE;
-    let winner = PARTICIPANTS[4];
+    let _winner = PARTICIPANTS[4];
 
     // // check balance of nft marketplace contract
     // ft_program.balance_of(MARKET_ID).check(winner_price);
@@ -302,11 +289,7 @@ fn auction_failures() {
             TOKEN_ID.into(),
             None,
         )
-        .succeed((
-            nft_program.actor_id(),
-            TOKEN_ID.into(),
-            None,
-        ));
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
     // create auction failures
 
