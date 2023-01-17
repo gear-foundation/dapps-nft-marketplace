@@ -2,7 +2,7 @@ use crate::{
     nft_messages::*, payment::*, ContractId, Item, Market, MarketErr, MarketEvent, MarketTx,
     TokenId, TransactionId, BASE_PERCENT, MINIMUM_VALUE,
 };
-use gstd::{exec, msg, prelude::*, ActorId};
+use gstd::{exec, debug, msg, prelude::*, ActorId};
 
 impl Market {
     pub async fn buy_item(
@@ -17,6 +17,9 @@ impl Market {
             .get_mut(&contract_and_token_id)
             .expect("Item does not exist");
 
+        if let Some(auction) = item.auction {
+            return 
+        }
         assert!(item.auction.is_none(), "There is an opened auction");
 
         let price = item.price.expect("The item is not on sale");
@@ -90,6 +93,7 @@ async fn buy_item_tx(
             return Err(MarketErr::RerunTransaction);
         }
         item.tx = None;
+        debug!("error");
         return Err(MarketErr::TokenTransferFailed);
     }
     // send tokens to the seller, royalties and tresuary account

@@ -6,17 +6,17 @@ license = "MIT"
 authors = ["Gear Technologies"]
 
 [dependencies]
-gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"] }
+gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "stable" }
 primitive-types = { version = "0.12.1", default-features = false, features = ["scale-info"] }
-nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.4" }
+nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.7" }
 market-io = { path = "io" }
 sp-core-hashing = { version = "4.0.0", default-features = false }
-gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.1" }
-ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", tag = "0.1.0" }
-ft-logic-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", tag = "0.1.0" }
+ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", branch = "lm-new-meta" }
+ft-logic-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", branch = "lm-new-meta"  }
+gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.4" }
 
 [dev-dependencies]
-gtest = { git = "https://github.com/gear-tech/gear.git" }
+gtest = { git = "https://github.com/gear-tech/gear.git" , branch = "stable"}
 
 [build-dependencies]
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }

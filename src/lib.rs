@@ -13,9 +13,9 @@ use state::*;
 
 pub type ContractAndTokenId = String;
 
-const MIN_TREASURY_FEE: u8 = 0;
-const MAX_TREASURT_FEE: u8 = 5;
-pub const BASE_PERCENT: u8 = 100;
+const MIN_TREASURY_FEE: u16 = 0;
+const MAX_TREASURT_FEE: u16 = 5;
+pub const BASE_PERCENT: u16 = 100;
 pub const MINIMUM_VALUE: u64 = 500;
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
@@ -24,7 +24,7 @@ pub const MINIMUM_VALUE: u64 = 500;
 pub struct Market {
     pub admin_id: ActorId,
     pub treasury_id: ActorId,
-    pub treasury_fee: u8,
+    pub treasury_fee: u16,
     pub items: BTreeMap<(ContractId, TokenId), Item>,
     pub approved_nft_contracts: BTreeSet<ActorId>,
     pub approved_ft_contracts: BTreeSet<ActorId>,
@@ -75,13 +75,11 @@ impl Market {
                 price,
                 auction: None,
                 offers: BTreeMap::new(),
-                bids: BTreeMap::new(),
                 tx: None,
             });
 
         Ok(MarketEvent::MarketDataAdded {
             nft_contract_id: *nft_contract_id,
-            owner: msg::source(),
             token_id,
             price,
         })

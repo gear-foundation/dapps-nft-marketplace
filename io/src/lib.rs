@@ -11,7 +11,7 @@ pub type TransactionId = u64;
 pub struct InitMarket {
     pub admin_id: ActorId,
     pub treasury_id: ActorId,
-    pub treasury_fee: u8,
+    pub treasury_fee: u16,
 }
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
@@ -54,7 +54,6 @@ pub struct Item {
     pub price: Option<Price>,
     pub auction: Option<Auction>,
     pub offers: BTreeMap<(Option<ContractId>, Price), ActorId>,
-    pub bids: BTreeMap<(Option<ContractId>, Price), ActorId>,
     pub tx: Option<(TransactionId, MarketTx)>,
 }
 
@@ -75,7 +74,6 @@ pub enum MarketAction {
     ///
     /// # Requirements:
     /// Only admin can add approved fungible-token accounts.
-    ///
     ///
     /// On success replies [`MarketEvent::FtContractAdded`].
     AddFTContract(
@@ -245,7 +243,6 @@ pub enum MarketEvent {
     FtContractAdded(ContractId),
     MarketDataAdded {
         nft_contract_id: ContractId,
-        owner: ActorId,
         token_id: TokenId,
         price: Option<u128>,
     },

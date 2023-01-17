@@ -4,7 +4,7 @@ use crate::{
     payouts,
     Market, MarketEvent, BASE_PERCENT, MINIMUM_VALUE,
 };
-use gstd::{exec, msg, prelude::*, ActorId};
+use gstd::{exec, debug, msg, prelude::*, ActorId};
 use market_io::*;
 const MIN_BID_PERIOD: u64 = 60_000;
 
@@ -95,6 +95,7 @@ impl Market {
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
 
+        
         let item = self
             .items
             .get_mut(&contract_and_token_id)
@@ -157,7 +158,6 @@ impl Market {
         let tx_id = self.tx_id;
         self.tx_id = self.tx_id.wrapping_add(payouts.len() as u64);
         item.tx = Some((tx_id, MarketTx::SettleAuction));
-
         settle_auction_tx(tx_id, item, &payouts, nft_contract_id, token_id, price).await
     }
 
@@ -187,6 +187,8 @@ impl Market {
                     "Cant offer less or equal to the current bid price"
                 );
                 assert!(msg::value() == price, "Not enough attached value");
+                msg::send(auction.current_winner, MarketEvent::TransferValue, auction.current_price)
+                    .expect("Error in sending value");
                 auction.current_price = price;
                 auction.current_winner = msg::source();
                 return Ok(MarketEvent::BidAdded {
@@ -221,8 +223,9 @@ impl Market {
             }
         }
 
+
         let tx_id = self.tx_id;
-        self.tx_id = self.tx_id.wrapping_add(1);
+        self.tx_id = self.tx_id.wrapping_add(2);
         item.tx = Some((
             tx_id,
             MarketTx::Bid {
@@ -270,6 +273,7 @@ async fn create_auction_tx(
         current_price: price,
         current_winner: ActorId::zero(),
     });
+    item.tx = None;
     Ok(MarketEvent::AuctionCreated {
         nft_contract_id: (*nft_contract_id),
         token_id,
@@ -278,7 +282,7 @@ async fn create_auction_tx(
 }
 
 async fn add_bid_tx(
-    tx_id: TransactionId,
+    mut tx_id: TransactionId,
     item: &mut Item,
     nft_contract_id: &ContractId,
     ft_contract_id: &ContractId,
@@ -287,7 +291,6 @@ async fn add_bid_tx(
     price: Price,
 ) -> Result<MarketEvent, MarketErr> {
     let auction: &mut Auction = item.auction.as_mut().expect("Can't be None");
-
     if price <= auction.current_price {
         return Err(MarketErr::WrongPrice);
     }
@@ -299,9 +302,19 @@ async fn add_bid_tx(
         item.tx = None;
         return Err(MarketErr::TokenTransferFailed);
     }
+
+    tx_id += 1;
+    if  !auction.current_winner.is_zero() && transfer_tokens(tx_id, ft_contract_id, &exec::program_id(), &auction.current_winner, auction.current_price)
+        .await
+        .is_err()
+    {
+        return Err(MarketErr::RerunTransaction);
+    }
+
     item.tx = None;
     auction.current_price = price;
     auction.current_winner = *account;
+   
     Ok(MarketEvent::BidAdded {
         nft_contract_id: *nft_contract_id,
         token_id,

@@ -2,7 +2,7 @@ use crate::{
     nft_messages::*, payment::*, ContractId, Item, Market, MarketErr, MarketEvent,
     MarketTx, Price, TokenId, TransactionId, BASE_PERCENT, MINIMUM_VALUE,
 };
-use gstd::{exec, msg, prelude::*, ActorId};
+use gstd::{exec, debug,msg, prelude::*, ActorId};
 
 impl Market {
     pub async fn add_offer(
@@ -45,6 +45,8 @@ impl Market {
                 price,
             });
         };
+
+        debug!("here {:?}", price);
 
         if let Some((tx_id, tx)) = item.tx.clone() {
             match tx {
