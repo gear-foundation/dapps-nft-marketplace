@@ -55,4 +55,4 @@ test: deps
 
 full-test: deps
 	@echo ⚙️ Running all tests...
-	@cargo +nightly t -Fbinary-vendor -- --include-ignored
+	@cargo +nightly t -- --include-ignored
