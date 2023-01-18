@@ -15,8 +15,8 @@ impl Program for FungibleToken<'_> {
 impl<'a> FungibleToken<'a> {
     pub fn initialize(system: &'a System) -> Self {
         let program = InnerProgram::from_file(system, "./target/ft_main.wasm");
-        let storage_code_hash: [u8; 32] = system.submit_code("./target/ft_storage.opt.wasm").into();
-        let ft_logic_code_hash: [u8; 32] = system.submit_code("./target/ft_logic.opt.wasm").into();
+        let storage_code_hash: [u8; 32] = system.submit_code("./target/ft_storage.wasm").into();
+        let ft_logic_code_hash: [u8; 32] = system.submit_code("./target/ft_logic.wasm").into();
 
         // let program = InnerProgram::from_file(system, "./sharded-fungible-token/target/wasm32-unknown-unknown/release/ft_main.opt.wasm");
         // let storage_code_hash: [u8; 32] = system.submit_code("./sharded-fungible-token/target/wasm32-unknown-unknown/release/ft_storage.opt.wasm").into();
