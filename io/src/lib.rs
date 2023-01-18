@@ -32,6 +32,12 @@ pub struct Market {
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
+pub struct ItemInfoArgs {
+    nft_contract_id: ActorId,
+    token_id: U256,
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo)]
 pub struct InitMarket {
     pub admin_id: ActorId,
     pub treasury_id: ActorId,
@@ -336,10 +342,9 @@ pub fn all_items(state: <MarketMetadata as Metadata>::State) -> Vec<Item> {
     state.items.values().cloned().collect()
 }
 
-pub fn item_info(
-    state: <MarketMetadata as Metadata>::State,
-    nft_contract_id: &ActorId,
-    token_id: U256,
-) -> Option<Item> {
-    state.items.get(&(*nft_contract_id, token_id)).cloned()
+pub fn item_info(state: <MarketMetadata as Metadata>::State, args: &ItemInfoArgs) -> Option<Item> {
+    state
+        .items
+        .get(&(args.nft_contract_id, args.token_id))
+        .cloned()
 }

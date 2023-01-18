@@ -1,6 +1,4 @@
-use crate::{
-    auction::AuctionHandler, nft_messages::get_owner, offers::OffersHandler, sale::SaleHandler,
-};
+use crate::{auction::*, nft_messages::get_owner, offers::OffersHandler, sale::SaleHandler};
 use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
 use market_io::*;
 
@@ -183,7 +181,6 @@ async fn main() {
             token_id,
             price,
         } => market.add_bid(&nft_contract_id, token_id, price).await,
-
         MarketAction::SettleAuction {
             nft_contract_id,
             token_id,
