@@ -11,7 +11,7 @@ pub async fn nft_transfer(
     to: &ActorId,
     token_id: U256,
 ) -> Result<(), ()> {
-    let reply: Result<NFTEvent, _> = msg::send_for_reply_as(
+    msg::send_for_reply_as::<NFTAction, NFTEvent>(
         *nft_program_id,
         NFTAction::Transfer {
             transaction_id,
@@ -21,16 +21,13 @@ pub async fn nft_transfer(
         0,
     )
     .expect("Error in sending a message `NFTAction::Transfer`")
-    .await;
-
-    match reply {
-        Ok(_) => Ok(()),
-        _ => Err(()),
-    }
+    .await
+    .map(|_| ())
+    .map_err(|_| ())
 }
 
 pub async fn payouts(nft_program_id: &ActorId, owner: &ActorId, amount: u128) -> Payout {
-    let reply = msg::send_for_reply_as::<_, NFTEvent>(
+    let reply: NFTEvent = msg::send_for_reply_as(
         *nft_program_id,
         NFTAction::NFTPayout {
             owner: *owner,
@@ -41,6 +38,7 @@ pub async fn payouts(nft_program_id: &ActorId, owner: &ActorId, amount: u128) ->
     .expect("Error in sending a message `NFTAction::NFTPayout`")
     .await
     .expect("Unable to decode `NFTEvent`");
+
     match reply {
         NFTEvent::NFTPayout(payout) => payout,
         _ => panic!("Wrong received reply"),
@@ -53,6 +51,7 @@ pub async fn get_owner(nft_contract_id: &ContractId, token_id: TokenId) -> Actor
             .expect("Error in sending a message `NFTAction::Owner`")
             .await
             .expect("Unable to decode `NFTEvent`");
+
     match reply {
         NFTEvent::Owner { owner, token_id: _ } => owner,
         _ => panic!("Wrong received message"),
