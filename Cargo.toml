@@ -17,11 +17,11 @@ gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.4" }
 async-trait = "0.1.60"
 
 [dev-dependencies]
-gtest = { git = "https://github.com/gear-tech/gear.git" }
+gtest = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }
 
 [build-dependencies]
 market-io = { path = "io" }
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }
 
 [features]
 # Used for inserting constants with WASM binaries (NOT paths) of the contract in

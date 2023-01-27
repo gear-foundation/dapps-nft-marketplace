@@ -9,9 +9,8 @@ authors = ["Gear Technologies"]
 
 [dependencies]
 gstd = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }
-# TODO: pin to the "stable" branch before the merge.
-gmeta = { git = "https://github.com/gear-tech/gear.git", features = ["codegen"] }
+gmeta = { git = "https://github.com/gear-tech/gear.git", branch = "stable", features = ["codegen"] }
 market-io = { path = "../io" }
 
 [build-dependencies]
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", features = ["metawasm"] }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "stable", features = ["metawasm"] }
