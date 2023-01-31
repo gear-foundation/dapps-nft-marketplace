@@ -742,7 +742,7 @@ dependencies = [
  "gtest",
  "market-io",
  "nft-io",
- "primitive-types 0.11.1",
+ "primitive-types 0.12.1",
  "sp-core-hashing 6.0.0",
 ]
 
