@@ -60,59 +60,68 @@ impl AuctionHandler for Market {
         self.check_approved_nft_contract(nft_contract_id);
         self.check_approved_ft_contract(ft_contract_id);
         let contract_and_token_id = (*nft_contract_id, token_id);
-        let item = self
-            .items
-            .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
-        assert_eq!(
-            item.owner,
-            msg::source(),
-            "Only owner has a right to add NFT to the marketplace and start the auction"
-        );
-        assert!(item.auction.is_none(), "There is already an auction");
-        assert!(
-            item.price.is_none(),
-            "Remove the item from the sale before starting the auction"
-        );
-        assert!(
-            bid_period >= MIN_BID_PERIOD && duration >= MIN_BID_PERIOD,
-            "bid period and auction duration can't be less than 1 minute"
-        );
-        assert!(min_price > 0, "minimum price can't be equal to zero");
 
-        if let Some((tx_id, tx)) = item.tx.clone() {
-            if tx == MarketTx::CreateAuction {
-                return create_auction_tx(
-                    tx_id,
-                    item,
-                    nft_contract_id,
-                    ft_contract_id,
-                    token_id,
-                    min_price,
-                    bid_period,
-                    duration,
-                )
-                .await;
-            } else {
-                return Err(MarketErr::WrongTransaction);
+        if let Some(item) = self.items.get_mut(&contract_and_token_id) {
+            assert_eq!(
+                item.owner,
+                msg::source(),
+                "Only owner has a right to add NFT to the marketplace and start the auction"
+            );
+
+            if item.auction.is_some() {
+                return Err(MarketErr::AuctionIsAlreadyExists);
             }
+
+            assert!(
+                item.price.is_none(),
+                "Remove the item from the sale before starting the auction"
+            );
+
+            if bid_period < MIN_BID_PERIOD || duration < MIN_BID_PERIOD {
+                return Err(MarketErr::AuctionBidPeriodOrDurationIsInvalid);
+            }
+
+            #[allow(clippy::absurd_extreme_comparisons)]
+            if min_price <= 0 {
+                return Err(MarketErr::AuctionMinPriceIsZero);
+            }
+
+            if let Some((tx_id, tx)) = item.tx.clone() {
+                if tx == MarketTx::CreateAuction {
+                    return create_auction_tx(
+                        tx_id,
+                        item,
+                        nft_contract_id,
+                        ft_contract_id,
+                        token_id,
+                        min_price,
+                        bid_period,
+                        duration,
+                    )
+                    .await;
+                } else {
+                    return Err(MarketErr::WrongTransaction);
+                }
+            }
+
+            let tx_id = self.tx_id;
+            self.tx_id = self.tx_id.wrapping_add(1);
+            item.tx = Some((tx_id, MarketTx::CreateAuction));
+
+            create_auction_tx(
+                tx_id,
+                item,
+                nft_contract_id,
+                ft_contract_id,
+                token_id,
+                min_price,
+                bid_period,
+                duration,
+            )
+            .await
+        } else {
+            Err(MarketErr::ItemDoesNotExists)
         }
-
-        let tx_id = self.tx_id;
-        self.tx_id = self.tx_id.wrapping_add(1);
-        item.tx = Some((tx_id, MarketTx::CreateAuction));
-
-        create_auction_tx(
-            tx_id,
-            item,
-            nft_contract_id,
-            ft_contract_id,
-            token_id,
-            min_price,
-            bid_period,
-            duration,
-        )
-        .await
     }
 
     /// Settles the auction.
@@ -134,69 +143,71 @@ impl AuctionHandler for Market {
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
 
-        let item = self
-            .items
-            .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+        if let Some(item) = self.items.get_mut(&contract_and_token_id) {
+            let Some(auction) = item.auction.clone() else {
+                return Err(MarketErr::AuctionDoesNotExists);
+            };
 
-        let auction: Auction = item.auction.clone().expect("Auction doesn not exist");
+            if auction.ended_at > exec::block_timestamp() {
+                return Err(MarketErr::AuctionIsNotOver);
+            }
 
-        if auction.ended_at > exec::block_timestamp() {
-            panic!("Auction is not over");
-        }
+            if let Some((tx_id, tx)) = item.tx.clone() {
+                match tx {
+                    MarketTx::Bid { account, price } => {
+                        let ft_id = item.ft_contract_id.expect("Can't be None");
+                        add_bid_tx(
+                            tx_id,
+                            item,
+                            nft_contract_id,
+                            &ft_id,
+                            token_id,
+                            &account,
+                            price,
+                        )
+                        .await;
+                    }
+                    MarketTx::SettleAuction => {
+                        let price = auction.current_price;
+                        // calculate fee for treasury
+                        let treasury_fee =
+                            price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
 
-        if let Some((tx_id, tx)) = item.tx.clone() {
-            match tx {
-                MarketTx::Bid { account, price } => {
-                    let ft_id = item.ft_contract_id.expect("Can't be None");
-                    add_bid_tx(
-                        tx_id,
-                        item,
-                        nft_contract_id,
-                        &ft_id,
-                        token_id,
-                        &account,
-                        price,
-                    )
-                    .await;
-                }
-                MarketTx::SettleAuction => {
-                    let price = auction.current_price;
-                    // calculate fee for treasury
-                    let treasury_fee =
-                        price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
-
-                    // payouts for NFT sale (includes royalty accounts and seller)
-                    let mut payouts =
-                        payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
-                    payouts.insert(self.treasury_id, treasury_fee);
-                    return settle_auction_tx(
-                        tx_id,
-                        item,
-                        &payouts,
-                        nft_contract_id,
-                        token_id,
-                        price,
-                    )
-                    .await;
-                }
-                _ => {
-                    return Err(MarketErr::WrongTransaction);
+                        // payouts for NFT sale (includes royalty accounts and seller)
+                        let mut payouts =
+                            payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
+                        payouts.insert(self.treasury_id, treasury_fee);
+                        return settle_auction_tx(
+                            tx_id,
+                            item,
+                            &payouts,
+                            nft_contract_id,
+                            token_id,
+                            price,
+                        )
+                        .await;
+                    }
+                    _ => {
+                        return Err(MarketErr::WrongTransaction);
+                    }
                 }
             }
+
+            let price = auction.current_price;
+            // calculate fee for treasury
+            let treasury_fee = price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
+
+            // payouts for NFT sale (includes royalty accounts and seller)
+            let mut payouts = payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
+            payouts.insert(self.treasury_id, treasury_fee);
+
+            let tx_id = self.tx_id;
+            self.tx_id = self.tx_id.wrapping_add(payouts.len() as u64);
+            item.tx = Some((tx_id, MarketTx::SettleAuction));
+            settle_auction_tx(tx_id, item, &payouts, nft_contract_id, token_id, price).await
+        } else {
+            Err(MarketErr::ItemDoesNotExists)
         }
-        let price = auction.current_price;
-        // calculate fee for treasury
-        let treasury_fee = price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
-
-        // payouts for NFT sale (includes royalty accounts and seller)
-        let mut payouts = payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
-        payouts.insert(self.treasury_id, treasury_fee);
-
-        let tx_id = self.tx_id;
-        self.tx_id = self.tx_id.wrapping_add(payouts.len() as u64);
-        item.tx = Some((tx_id, MarketTx::SettleAuction));
-        settle_auction_tx(tx_id, item, &payouts, nft_contract_id, token_id, price).await
     }
 
     async fn add_bid(
@@ -207,84 +218,89 @@ impl AuctionHandler for Market {
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
 
-        let item = self
-            .items
-            .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+        if let Some(item) = self.items.get_mut(&contract_and_token_id) {
+            if let Some(auction) = item.auction.as_mut() {
+                if auction.ended_at < exec::block_timestamp() {
+                    return Err(MarketErr::AuctionIsAlreadyEnded);
+                }
 
-        let auction: &mut Auction = item.auction.as_mut().expect("Auction doesn not exist");
-        if auction.ended_at < exec::block_timestamp() {
-            panic!("Auction has already ended");
-        }
+                let ft_id = match item.ft_contract_id {
+                    Some(ft_id) => ft_id,
+                    None => {
+                        if price <= auction.current_price {
+                            return Err(MarketErr::WrongPrice);
+                        }
 
-        let ft_id = match item.ft_contract_id {
-            Some(ft_id) => ft_id,
-            None => {
-                assert!(
-                    price > auction.current_price,
-                    "Cant offer less or equal to the current bid price"
-                );
-                assert!(msg::value() == price, "Not enough attached value");
-                msg::send(
-                    auction.current_winner,
-                    MarketEvent::TransferValue,
-                    auction.current_price,
-                )
-                .expect("Error in sending value");
-                auction.current_price = price;
-                auction.current_winner = msg::source();
-                return Ok(MarketEvent::BidAdded {
-                    nft_contract_id: *nft_contract_id,
-                    token_id,
-                    price,
-                });
-            }
-        };
+                        assert!(msg::value() == price, "Not enough attached value");
 
-        if let Some((tx_id, tx)) = item.tx.clone() {
-            match tx {
-                MarketTx::Bid { account, price } => {
-                    let new_price = price;
-                    let result = add_bid_tx(
-                        tx_id,
-                        item,
-                        nft_contract_id,
-                        &ft_id,
-                        token_id,
-                        &account,
-                        price,
-                    )
-                    .await;
-                    if account == msg::source() && new_price == price {
-                        return result;
+                        msg::send(
+                            auction.current_winner,
+                            MarketEvent::TransferValue,
+                            auction.current_price,
+                        )
+                        .expect("Error in sending value");
+
+                        auction.current_price = price;
+                        auction.current_winner = msg::source();
+
+                        return Ok(MarketEvent::BidAdded {
+                            nft_contract_id: *nft_contract_id,
+                            token_id,
+                            price,
+                        });
+                    }
+                };
+
+                if let Some((tx_id, tx)) = item.tx.clone() {
+                    match tx {
+                        MarketTx::Bid { account, price } => {
+                            let new_price = price;
+                            let result = add_bid_tx(
+                                tx_id,
+                                item,
+                                nft_contract_id,
+                                &ft_id,
+                                token_id,
+                                &account,
+                                price,
+                            )
+                            .await;
+                            if account == msg::source() && new_price == price {
+                                return result;
+                            }
+                        }
+                        _ => {
+                            return Err(MarketErr::WrongTransaction);
+                        }
                     }
                 }
-                _ => {
-                    return Err(MarketErr::WrongTransaction);
-                }
+
+                let tx_id = self.tx_id;
+                self.tx_id = self.tx_id.wrapping_add(2);
+                item.tx = Some((
+                    tx_id,
+                    MarketTx::Bid {
+                        account: msg::source(),
+                        price,
+                    },
+                ));
+
+                add_bid_tx(
+                    tx_id,
+                    item,
+                    nft_contract_id,
+                    &ft_id,
+                    token_id,
+                    &msg::source(),
+                    price,
+                )
+                .await
+            } else {
+                Err(MarketErr::AuctionDoesNotExists)
             }
+        } else {
+            Err(MarketErr::ItemDoesNotExists)
         }
-
-        let tx_id = self.tx_id;
-        self.tx_id = self.tx_id.wrapping_add(2);
-        item.tx = Some((
-            tx_id,
-            MarketTx::Bid {
-                account: msg::source(),
-                price,
-            },
-        ));
-
-        add_bid_tx(
-            tx_id,
-            item,
-            nft_contract_id,
-            &ft_id,
-            token_id,
-            &msg::source(),
-            price,
-        )
-        .await
     }
 }
 
@@ -380,6 +396,9 @@ async fn settle_auction_tx(
 ) -> Result<MarketEvent, MarketErr> {
     let auction: &mut Auction = item.auction.as_mut().expect("Can't be None");
     let winner = if auction.current_winner.is_zero() {
+        item.auction = None;
+        item.tx = None;
+
         return Ok(MarketEvent::AuctionCancelled {
             nft_contract_id: *nft_contract_id,
             token_id,

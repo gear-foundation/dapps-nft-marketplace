@@ -1,6 +1,5 @@
 use super::{prelude::*, MetaStateReply};
 use gear_lib::non_fungible_token::{io::*, token::Token};
-
 use gstd::ActorId;
 use gtest::{Log, Program as InnerProgram, System};
 use market_io::*;

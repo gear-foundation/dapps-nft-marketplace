@@ -63,7 +63,7 @@ fn offers() {
         offers.insert((Some(ft_program.actor_id()), offered_price), BUYER.into());
     }
 
-    // // check item state
+    // TODO: Check item state
     // let mut item = Item {
     //     owner: SELLER.into(),
     //     ft_contract_id: Some(ft_program.actor_id()),
@@ -77,7 +77,7 @@ fn offers() {
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item.clone());
 
-    // accept offer (for fungible tokens)
+    // Accept offer (for fungible tokens)
     let accepted_price = 10_000 * 15;
     market
         .accept_offer(
@@ -94,23 +94,23 @@ fn offers() {
             accepted_price,
         ));
 
-    // // check owner
+    // TODO: Check owner
     // nft_program
     //     .meta_state()
     //     .owner_id(TOKEN_ID)
     //     .check(BUYER.into());
 
-    // let treasury_fee = accepted_price * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
+    let treasury_fee = accepted_price * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
 
-    // // check balance of SELLER
-    // ft_program
-    //     .balance_of(seller_actor_id())
-    //     .check(accepted_price - treasury_fee);
+    // Check balance of SELLER
+    ft_program
+        .balance_of(SELLER)
+        .check(accepted_price - treasury_fee);
 
-    // // check balance of TREASURY_ID
-    // ft_program.balance_of(TREASURY_ID).check(treasury_fee);
+    // Check balance of TREASURY_ID
+    ft_program.balance_of(TREASURY_ID).check(treasury_fee);
 
-    // // check item state
+    // TODO: Check item state
     // item.owner = BUYER.into();
     // item.price = None;
     // item.offers
@@ -120,8 +120,8 @@ fn offers() {
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item.clone());
 
-    // withdraw tokens
-    let withdrawn_tokens = 10_000 * 12_u128;
+    // TODO: Withdraw tokens
+    /* let withdrawn_tokens = 10_000 * 12_u128;
     market
         .withdraw(
             BUYER.into(),
@@ -130,12 +130,12 @@ fn offers() {
             Some(ft_program.actor_id()),
             withdrawn_tokens,
         )
-        .succeed((nft_program.actor_id(), TOKEN_ID.into(), withdrawn_tokens));
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), withdrawn_tokens)); */
 
-    // // check balance of BUYER after tokens withdrawal
+    // Check balance of BUYER after tokens withdrawal
     // ft_program.balance_of(BUYER).check(withdrawn_tokens);
 
-    // // check item state
+    // TODO: Check item state
     // item.offers
     //     .remove(&(Some(ft_program.actor_id()), withdrawn_tokens));
     // market
@@ -143,37 +143,34 @@ fn offers() {
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item.clone());
 
-    // // withdraw native tokens
-    // let withdrawn_tokens = 10_000 * 2_u128;
-    // market
-    //     .withdraw(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         withdrawn_tokens,
-    //     )
-    //     .succeed((
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         withdrawn_tokens,
-    //     ));
+    // Withdraw native tokens
+    let withdrawn_tokens = 10_000 * 2_u128;
+    market
+        .withdraw(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            withdrawn_tokens,
+        )
+        .succeed((nft_program.actor_id(), TOKEN_ID.into(), withdrawn_tokens));
 
-    // // check item state
+    // TODO: Check item state
     // item.offers.remove(&(None, withdrawn_tokens));
     // market
     //     .meta_state()
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item.clone());
 
-    // // check balance of SELLER after tokens withdrawal
-    // system.claim_value_from_mailbox(BUYER);
-    // assert_eq!(system.balance_of(BUYER), withdrawn_tokens);
+    // Check balance of SELLER after tokens withdrawal
+    system.claim_value_from_mailbox(BUYER);
+    assert_eq!(system.balance_of(BUYER), withdrawn_tokens);
 
-    // previous owner makes offer for native value
+    // Previous owner makes offer for native value
     let offered_value = 1_000_000;
-    let _buyer_balance = system.balance_of(BUYER);
-    let _treasury_fee = offered_value * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
+    let buyer_balance = system.balance_of(BUYER);
+    let treasury_fee = offered_value * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
+
     system.mint_to(SELLER, offered_value);
     market
         .add_offer(
@@ -186,39 +183,39 @@ fn offers() {
         )
         .succeed((nft_program.actor_id(), None, TOKEN_ID.into(), offered_value));
 
-    // new owner accepts offer
-    /* market
-    .accept_offer(
-        BUYER.into(),
-        nft_program.actor_id(),
-        TOKEN_ID.into(),
-        None,
-        offered_value,
-    )
-    .succeed((
-        nft_program.actor_id(),
-        TOKEN_ID.into(),
-        SELLER.into(),
-        offered_value,
-    )); */
+    // New owner accepts offer
+    market
+        .accept_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            offered_value,
+        )
+        .succeed((
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            SELLER.into(),
+            offered_value,
+        ));
 
-    // check balance of BUYER
-    /* system.claim_value_from_mailbox(BUYER);
+    // Check balance of BUYER
+    system.claim_value_from_mailbox(BUYER);
     assert_eq!(
         system.balance_of(BUYER),
         buyer_balance + offered_value - treasury_fee
-    ); */
+    );
 
-    // check balance of TREASURY_ID
-    /* system.claim_value_from_mailbox(TREASURY_ID);
-    assert_eq!(system.balance_of(TREASURY_ID), treasury_fee); */
+    // Check balance of TREASURY_ID
+    system.claim_value_from_mailbox(TREASURY_ID);
+    assert_eq!(system.balance_of(TREASURY_ID), treasury_fee);
 }
 
 #[test]
 fn offers_failures() {
     let system = utils::initialize_system();
 
-    let (ft_program, nft_program, market) = utils::initialize_programs(&system);
+    let (ft_program, nft_program, market) = utils::initialize_programs_without_ft_approve(&system);
 
     market
         .add_market_data(
@@ -231,49 +228,49 @@ fn offers_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
-    // // must fail since the fungible token contract is not approved
-    // market
-    //     .add_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         Some(ft_program.actor_id()),
-    //         NFT_PRICE,
-    //         0,
-    //     )
-    //     .failed();
+    // Must fail since the fungible token contract is not approved
+    market
+        .add_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            Some(ft_program.actor_id()),
+            NFT_PRICE,
+            0,
+        )
+        .failed(MarketErr::ContractNotApproved);
 
     market
         .add_ft_contract(ADMIN, ft_program.actor_id())
         .succeed(ft_program.actor_id());
 
-    // // must fail since the price is zero
-    // market
-    //     .add_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         Some(ft_program.actor_id()),
-    //         0,
-    //         0,
-    //     )
-    //     .failed();
+    // Must fail since the price is zero
+    market
+        .add_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            Some(ft_program.actor_id()),
+            0,
+            0,
+        )
+        .failed(MarketErr::WrongPrice);
 
-    system.mint_to(BUYER, 2 * NFT_PRICE);
+    system.mint_to(BUYER, 4 * NFT_PRICE);
 
-    // // must fail since the attached value is not equal to the offered price
-    // market
-    //     .add_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE,
-    //         NFT_PRICE - 1000,
-    //     )
-    //     .failed();
+    // Must fail since the attached value is not equal to the offered price
+    market
+        .add_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE,
+            NFT_PRICE - 1000,
+        )
+        .failed(MarketErr::WrongPrice);
 
-    // add offer
+    // Add offer
     market
         .add_offer(
             BUYER.into(),
@@ -285,43 +282,43 @@ fn offers_failures() {
         )
         .succeed((nft_program.actor_id(), None, TOKEN_ID.into(), NFT_PRICE));
 
-    // // must fail since the offers with these params already exists
-    // market
-    //     .add_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
+    // Must fail since the offers with these params already exists
+    market
+        .add_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::OfferAlreadyExists);
 
-    // accept offer
+    // Accept offer
 
-    // // must fail since only owner can accept offer
-    // market
-    //     .accept_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
+    // Must fail since only owner can accept offer
+    market
+        .accept_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::OfferShouldAcceptedByOwner);
 
-    // // must fail since the offer with the params doesn't exist
-    // market
-    //     .accept_offer(
-    //         SELLER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         2 * NFT_PRICE,
-    //     )
-    //     .failed();
+    // Must fail since the offer with the params doesn't exist
+    market
+        .accept_offer(
+            SELLER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            2 * NFT_PRICE,
+        )
+        .failed(MarketErr::OfferIsNotExists);
 
-    // start auction
+    // Start auction
     market
         .create_auction(
             &system,
@@ -333,49 +330,49 @@ fn offers_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), NFT_PRICE));
 
-    // // must fail since auction is on
-    // market
-    //     .add_offer(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE - 1000,
-    //         NFT_PRICE - 1000,
-    //     )
-    //     .failed();
+    // Must fail since auction is on
+    market
+        .add_offer(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE - 1000,
+            NFT_PRICE - 1000,
+        )
+        .failed(MarketErr::AuctionIsAlreadyExists);
 
-    // market
-    //     .accept_offer(
-    //         SELLER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
+    market
+        .accept_offer(
+            SELLER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::AuctionIsOpened);
 
-    // withdraw failures
+    // Withdraw failures
 
-    // // must fail since the caller isn't the offer author
-    // market
-    //     .withdraw(
-    //         SELLER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
+    // Must fail since the caller isn't the offer author
+    market
+        .withdraw(
+            SELLER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::InvalidCaller);
 
-    // // must fail since the indicated offer hash doesn't exist
-    // market
-    //     .withdraw(
-    //         BUYER.into(),
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         None,
-    //         2 * NFT_PRICE,
-    //     )
-    //     .failed();
+    // Must fail since the indicated offer hash doesn't exist
+    market
+        .withdraw(
+            BUYER.into(),
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            None,
+            2 * NFT_PRICE,
+        )
+        .failed(MarketErr::OfferIsNotExists);
 }

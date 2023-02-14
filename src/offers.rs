@@ -1,9 +1,9 @@
 use crate::{
-    contract::{MarketHandler, BASE_PERCENT, MINIMUM_VALUE},
+    contract::{BASE_PERCENT, MINIMUM_VALUE},
     nft_messages::*,
     payment::*,
 };
-use gstd::{debug, exec, msg, prelude::*, ActorId};
+use gstd::{exec, msg, prelude::*, ActorId};
 use market_io::{
     ContractId, Item, Market, MarketErr, MarketEvent, MarketTx, Price, TokenId, TransactionId,
 };
@@ -45,31 +45,41 @@ impl OffersHandler for Market {
         price: Price,
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
-        self.check_approved_ft_contract(ft_contract_id);
-        assert!(
-            ft_contract_id.is_some() && price > 0
-                || ft_contract_id.is_none() && price > MINIMUM_VALUE.into(),
-            "Invalid price"
-        );
-        assert!(
-            ft_contract_id.is_some() || ft_contract_id.is_none() && msg::value() == price,
-            "Not enough attached value"
-        );
+
+        if let Some(ft_contract_id) = &ft_contract_id {
+            let is_ft_approved = self.approved_ft_contracts.contains(ft_contract_id);
+            if !is_ft_approved {
+                return Err(MarketErr::ContractNotApproved);
+            }
+        }
+
+        #[allow(clippy::absurd_extreme_comparisons)]
+        if ft_contract_id.is_some() && price <= 0
+            || ft_contract_id.is_none() && price <= MINIMUM_VALUE.into()
+        {
+            return Err(MarketErr::WrongPrice);
+        }
+
+        if ft_contract_id.is_none() && msg::value() != price {
+            return Err(MarketErr::WrongPrice);
+        }
+
         let item = self
             .items
             .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+            .ok_or(MarketErr::ItemDoesNotExists)?;
         if item.auction.is_some() {
-            panic!("There is an opened auction");
+            return Err(MarketErr::AuctionIsAlreadyExists);
         }
 
         if item.offers.contains_key(&(ft_contract_id, price)) {
-            panic!("the offer with these params already exists");
+            return Err(MarketErr::OfferAlreadyExists);
         };
 
         let ft_id = if let Some(ft_id) = ft_contract_id {
             ft_id
         } else {
+            item.offers.insert((None, price), msg::source());
             return Ok(MarketEvent::OfferAdded {
                 nft_contract_id: *nft_contract_id,
                 ft_contract_id,
@@ -77,8 +87,6 @@ impl OffersHandler for Market {
                 price,
             });
         };
-
-        debug!("here {:?}", price);
 
         if let Some((tx_id, tx)) = item.tx.clone() {
             match tx {
@@ -127,10 +135,16 @@ impl OffersHandler for Market {
         let item = self
             .items
             .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+            .ok_or(MarketErr::ItemDoesNotExists)?;
 
-        assert!(item.auction.is_none(), "There is an opened auction");
-        assert!(item.owner == msg::source(), "Only owner can accept offer");
+        if item.auction.is_some() {
+            return Err(MarketErr::AuctionIsOpened);
+        }
+
+        if item.owner != msg::source() {
+            return Err(MarketErr::OfferShouldAcceptedByOwner);
+        }
+
         assert!(
             item.price.is_none(),
             "Remove the item from the sale when accepting the offer"
@@ -139,7 +153,8 @@ impl OffersHandler for Market {
 
         let account = offers
             .get(&(ft_contract_id, price))
-            .expect("Offer does not exist");
+            .ok_or(MarketErr::OfferIsNotExists)?;
+
         // calculate fee for treasury
         let treasury_fee = price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
 
@@ -197,16 +212,16 @@ impl OffersHandler for Market {
         let item = self
             .items
             .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+            .ok_or(MarketErr::ItemDoesNotExists)?;
 
         let account = if let Some(account) = item.offers.get(&(ft_contract_id, price)) {
             *account
         } else {
-            panic!("Offer does not exsit");
+            return Err(MarketErr::OfferIsNotExists);
         };
 
         if account != msg::source() {
-            panic!("Can not withdraw others user's value");
+            return Err(MarketErr::InvalidCaller);
         }
 
         let ft_id = if let Some(ft_id) = ft_contract_id {
@@ -428,6 +443,7 @@ async fn withdraw_tx(
         item.tx = None;
         return Err(MarketErr::TokenTransferFailed);
     }
+
     item.tx = None;
     item.offers.remove(&(Some(*ft_contract_id), price));
     Ok(MarketEvent::Withdraw {

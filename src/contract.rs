@@ -192,9 +192,15 @@ async fn main() {
 #[no_mangle]
 extern "C" fn init() {
     let config: InitMarket = msg::load().expect("Unable to decode InitConfig");
-    if config.treasury_fee == MIN_TREASURY_FEE || config.treasury_fee > MAX_TREASURT_FEE {
+
+    // In case when `MIN_TREASURY_FEE` is zero, operator `<=` is not required,
+    // because this is minimum value. But if `MIN_TREASURY_FEE` could be changed later,
+    // usage of `==` operator can lead to unwanted errors or exploits
+    #[allow(clippy::absurd_extreme_comparisons)]
+    if config.treasury_fee <= MIN_TREASURY_FEE || config.treasury_fee > MAX_TREASURT_FEE {
         panic!("Wrong treasury fee");
     }
+
     let market = Market {
         admin_id: config.admin_id,
         treasury_id: config.treasury_id,

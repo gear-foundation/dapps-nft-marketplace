@@ -1,4 +1,6 @@
 pub mod utils;
+
+use market_io::MarketErr;
 use utils::prelude::*;
 
 #[test]
@@ -25,20 +27,22 @@ fn buy_with_fungible_tokens() {
         .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
         .succeed((BUYER.into(), nft_program.actor_id(), TOKEN_ID.into()));
 
-    // // check owner
+    // TODO: Check owner
     // nft_program
     //     .meta_state()
     //     .owner_id(TOKEN_ID)
     //     .check(BUYER.into());
-    // let treasury_fee = NFT_PRICE * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
 
-    // // check balance of SELLER
-    // ft_program
-    //     .balance_of(seller_actor_id())
-    //     .check(NFT_PRICE - treasury_fee);
+    // Check balance of SELLER
+    let treasury_fee = NFT_PRICE * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
+    ft_program
+        .balance_of(SELLER.into())
+        .check(NFT_PRICE - treasury_fee);
 
-    // // check balance of TREASURY_ID
-    // ft_program.balance_of(TREASURY_ID).check(treasury_fee);
+    // Check balance of TREASURY_ID
+    ft_program
+        .balance_of(TREASURY_ID.into())
+        .check(treasury_fee);
 }
 
 #[test]
@@ -47,10 +51,10 @@ fn buy_with_fungible_tokens_failures() {
 
     let (ft_program, nft_program, market) = utils::initialize_programs(&system);
 
-    // // must fail since item does not exist
-    // market
-    //     .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
-    //     .failed();
+    // Must fail since item does not exist
+    market
+        .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
+        .failed(MarketErr::ItemDoesNotExists);
 
     market
         .add_market_data(
@@ -63,10 +67,10 @@ fn buy_with_fungible_tokens_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
-    // // must fail since item isn't on sale
-    // market
-    //     .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
-    //     .failed();
+    // Must fail since item isn't on sale
+    market
+        .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
+        .failed(MarketErr::ItemIsNotOnSale);
 
     market
         .create_auction(
@@ -79,10 +83,10 @@ fn buy_with_fungible_tokens_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), NFT_PRICE));
 
-    // // must fail since auction has started on that item
-    // market
-    //     .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
-    //     .failed();
+    // Must fail since auction has started on that item
+    market
+        .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
+        .failed(MarketErr::ItemOnAuction);
 }
 
 #[test]
@@ -102,23 +106,23 @@ fn buy_with_native_tokens() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), Some(NFT_PRICE)));
 
-    system.mint_to(BUYER, NFT_PRICE);
+    system.mint_to(BUYER, NFT_PRICE * 2);
 
-    // // must fail since not enough value was attached to the message
-    // market
-    //     .buy_item(
-    //         BUYER,
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         NFT_PRICE - 1000,
-    //     )
-    //     .failed();
+    // Must fail since not enough value was attached to the message
+    market
+        .buy_item(
+            BUYER,
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            NFT_PRICE - 1000,
+        )
+        .failed(MarketErr::WrongPrice);
 
     market
         .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), NFT_PRICE)
         .succeed((BUYER.into(), nft_program.actor_id(), TOKEN_ID.into()));
 
-    // check owner
+    // TODO: Check owner
     /* nft_program
     .meta_state()
     .owner_id(TOKEN_ID)
@@ -126,14 +130,11 @@ fn buy_with_native_tokens() {
 
     let treasury_fee = NFT_PRICE * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
 
-    // // check balance of SELLER
-    // system.claim_value_from_mailbox(seller_actor_id().as_ref());
-    // assert_eq!(
-    //     system.balance_of(seller_actor_id().as_ref()),
-    //     NFT_PRICE - treasury_fee
-    // );
+    // Check balance of SELLER
+    system.claim_value_from_mailbox(SELLER);
+    assert_eq!(system.balance_of(SELLER), NFT_PRICE - treasury_fee);
 
-    // check balance of TREASURY_ID
+    // Check balance of TREASURY_ID
     system.claim_value_from_mailbox(TREASURY_ID);
     assert_eq!(system.balance_of(TREASURY_ID), treasury_fee);
 }

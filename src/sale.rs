@@ -3,7 +3,7 @@ use crate::{
     nft_messages::*,
     payment::*,
 };
-use gstd::{debug, exec, msg, prelude::*, ActorId};
+use gstd::{exec, msg, prelude::*, ActorId};
 use market_io::{
     ContractId, Item, Market, MarketErr, MarketEvent, MarketTx, TokenId, TransactionId,
 };
@@ -26,43 +26,51 @@ impl SaleHandler for Market {
     ) -> Result<MarketEvent, MarketErr> {
         let contract_and_token_id = (*nft_contract_id, token_id);
 
-        let item = self
-            .items
-            .get_mut(&contract_and_token_id)
-            .expect("Item does not exist");
+        if let Some(item) = self.items.get_mut(&contract_and_token_id) {
+            if item.auction.is_some() {
+                return Err(MarketErr::ItemOnAuction);
+            }
+            assert!(item.auction.is_none(), "There is an opened auction");
 
-        if item.auction.is_some() {
-            return Err(MarketErr::ItemOnAuction);
-        }
-        assert!(item.auction.is_none(), "There is an opened auction");
+            let Some(price) = item.price else {
+                return Err(MarketErr::ItemIsNotOnSale);
+            };
 
-        let price = item.price.expect("The item is not on sale");
+            // calculate fee for treasury
+            let treasury_fee = price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
 
-        // calculate fee for treasury
-        let treasury_fee = price * (self.treasury_fee * BASE_PERCENT) as u128 / 10_000u128;
+            // payouts for NFT sale (includes royalty accounts and seller)
+            let mut payouts = payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
+            payouts.insert(self.treasury_id, treasury_fee);
 
-        // payouts for NFT sale (includes royalty accounts and seller)
-        let mut payouts = payouts(nft_contract_id, &item.owner, price - treasury_fee).await;
-        payouts.insert(self.treasury_id, treasury_fee);
-
-        if let Some((tx_id, tx)) = item.tx.clone() {
-            match tx {
-                MarketTx::Sale { buyer } => {
-                    if buyer != msg::source() {
+            if let Some((tx_id, tx)) = item.tx.clone() {
+                match tx {
+                    MarketTx::Sale { buyer } => {
+                        if buyer != msg::source() {
+                            return Err(MarketErr::WrongTransaction);
+                        }
+                        return buy_item_tx(
+                            tx_id,
+                            item,
+                            nft_contract_id,
+                            &buyer,
+                            token_id,
+                            &payouts,
+                        )
+                        .await;
+                    }
+                    _ => {
                         return Err(MarketErr::WrongTransaction);
                     }
-                    return buy_item_tx(tx_id, item, nft_contract_id, &buyer, token_id, &payouts)
-                        .await;
-                }
-                _ => {
-                    return Err(MarketErr::WrongTransaction);
                 }
             }
+            let buyer = msg::source();
+            let tx_id = self.tx_id;
+            item.tx = Some((tx_id, MarketTx::Sale { buyer }));
+            buy_item_tx(tx_id, item, nft_contract_id, &buyer, token_id, &payouts).await
+        } else {
+            Err(MarketErr::ItemDoesNotExists)
         }
-        let buyer = msg::source();
-        let tx_id = self.tx_id;
-        item.tx = Some((tx_id, MarketTx::Sale { buyer }));
-        buy_item_tx(tx_id, item, nft_contract_id, &buyer, token_id, &payouts).await
     }
 }
 
@@ -107,7 +115,6 @@ async fn buy_item_tx(
             return Err(MarketErr::RerunTransaction);
         }
         item.tx = None;
-        debug!("error");
         return Err(MarketErr::TokenTransferFailed);
     }
     // send tokens to the seller, royalties and tresuary account

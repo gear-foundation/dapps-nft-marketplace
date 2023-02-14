@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::{prelude::*, MetaStateReply};
 use ft_logic_io::Action;
 use ft_main_io::*;
 use gstd::ActorId;
@@ -17,10 +17,6 @@ impl<'a> FungibleToken<'a> {
         let program = InnerProgram::from_file(system, "./target/ft_main.wasm");
         let storage_code_hash: [u8; 32] = system.submit_code("./target/ft_storage.wasm").into();
         let ft_logic_code_hash: [u8; 32] = system.submit_code("./target/ft_logic.wasm").into();
-
-        // let program = InnerProgram::from_file(system, "./sharded-fungible-token/target/wasm32-unknown-unknown/release/ft_main.opt.wasm");
-        // let storage_code_hash: [u8; 32] = system.submit_code("./sharded-fungible-token/target/wasm32-unknown-unknown/release/ft_storage.opt.wasm").into();
-        // let ft_logic_code_hash: [u8; 32] = system.submit_code("./sharded-fungible-token/target/wasm32-unknown-unknown/release/ft_logic.opt.wasm").into();
 
         assert!(!program
             .send(
@@ -51,6 +47,27 @@ impl<'a> FungibleToken<'a> {
                 }
             )
             .contains(&Log::builder().payload(FTokenEvent::Ok)));
+    }
+
+    pub fn balance_of(&self, actor: u64) -> MetaStateReply<u128> {
+        let payload = FTokenAction::GetBalance(actor.into()).encode();
+        let result = self.0.send_bytes(ADMIN, payload);
+        assert!(!result.main_failed());
+
+        let amount = result
+            .log()
+            .iter()
+            .find_map(|log| {
+                let mut payload = log.payload();
+                if let Ok(FTokenEvent::Balance(amount)) = FTokenEvent::decode(&mut payload) {
+                    Some(amount)
+                } else {
+                    None
+                }
+            })
+            .expect("Invalid balance reply!");
+
+        MetaStateReply(amount)
     }
 
     pub fn approve(&self, transaction_id: u64, from: u64, to: ActorId, amount: u128) {

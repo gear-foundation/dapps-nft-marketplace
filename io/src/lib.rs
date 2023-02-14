@@ -335,7 +335,21 @@ pub enum MarketErr {
     WrongTransaction,
     RerunTransaction,
     WrongPrice,
+    InvalidCaller,
     ItemOnAuction,
+    ItemDoesNotExists,
+    ItemIsNotOnSale,
+    AuctionBidPeriodOrDurationIsInvalid,
+    AuctionMinPriceIsZero,
+    AuctionIsAlreadyExists,
+    AuctionIsAlreadyEnded,
+    AuctionIsNotOver,
+    AuctionDoesNotExists,
+    AuctionIsOpened,
+    ContractNotApproved,
+    OfferAlreadyExists,
+    OfferShouldAcceptedByOwner,
+    OfferIsNotExists,
 }
 
 pub fn all_items(state: <MarketMetadata as Metadata>::State) -> Vec<Item> {

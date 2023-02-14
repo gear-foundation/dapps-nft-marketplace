@@ -1,6 +1,4 @@
-use super::prelude::*;
-use super::{FungibleToken, Market, NonFungibleToken};
-
+use super::{prelude::*, FungibleToken, Market, NonFungibleToken};
 use convert::identity;
 use core::fmt::Debug;
 use gstd::ActorId;
@@ -33,6 +31,29 @@ pub fn initialize_programs(system: &System) -> (FungibleToken, NonFungibleToken,
     market
         .add_nft_contract(ADMIN, nft_program.actor_id())
         .succeed(nft_program.actor_id());
+
+    (ft_program, nft_program, market)
+}
+
+pub fn initialize_programs_without_ft_approve(
+    system: &System,
+) -> (FungibleToken, NonFungibleToken, Market) {
+    let ft_program = FungibleToken::initialize(system);
+
+    let mut tx_id: u64 = 0;
+    let nft_program = NonFungibleToken::initialize(system);
+    nft_program.mint(tx_id, SELLER);
+
+    let market = Market::initialize(system);
+    ft_program.approve(tx_id, BUYER, market.actor_id(), NFT_PRICE);
+
+    tx_id += 1;
+    let token_id: TokenId = 0.into();
+    nft_program.approve(tx_id, SELLER, market.actor_id(), token_id);
+    market
+        .add_nft_contract(ADMIN, nft_program.actor_id())
+        .succeed(nft_program.actor_id());
+
     (ft_program, nft_program, market)
 }
 
@@ -53,6 +74,7 @@ impl<T: Debug + PartialEq> MetaStateReply<T> {
         assert_eq!(self.0, value);
     }
 }
+
 #[must_use]
 pub struct RunResult<T, R, E> {
     pub result: InnerRunResult,

@@ -60,7 +60,7 @@ fn auction_with_native_tokens() {
     // check balance of nft marketplace contract
     assert_eq!(system.balance_of(MARKET_ID), winner_price);
 
-    // // check item state
+    // TODO: Check item state
     // let mut item = Item {
     //     owner: SELLER.into(),
     //     ft_contract_id: None,
@@ -94,13 +94,13 @@ fn auction_with_native_tokens() {
     // item.auction = None;
     // item.owner = winner.into();
 
-    // // check item state
+    // TODO: Check item state
     // market
     //     .meta_state()
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item);
 
-    // // check owner
+    // TODO: Check owner
     // nft_program
     //     .meta_state()
     //     .owner_id(TOKEN_ID)
@@ -108,11 +108,11 @@ fn auction_with_native_tokens() {
 
     let treasury_fee = winner_price * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
 
-    // check balance of SELLER
+    // Check balance of SELLER
     system.claim_value_from_mailbox(SELLER);
     assert_eq!(system.balance_of(SELLER), winner_price - treasury_fee);
 
-    // check balance of TREASURY_ID
+    // Check balance of TREASURY_ID
     system.claim_value_from_mailbox(TREASURY_ID);
     assert_eq!(system.balance_of(TREASURY_ID), treasury_fee);
 }
@@ -203,21 +203,21 @@ fn auction_with_fungible_tokens() {
             )
             .succeed((nft_program.actor_id(), TOKEN_ID.into(), bid_price));
 
-        // // check that marketplace has returned funds to the previous participant
-        // if i != 0 {
-        //     ft_program
-        //         .balance_of(PARTICIPANTS[i - 1])
-        //         .check((i as u128 + 1) * NFT_PRICE);
-        // }
+        // Check that marketplace has returned funds to the previous participant
+        if i != 0 {
+            ft_program
+                .balance_of(PARTICIPANTS[i - 1])
+                .check((i as u128 + 1) * NFT_PRICE);
+        }
     }
 
     let winner_price = 6 * NFT_PRICE;
     let _winner = PARTICIPANTS[4];
 
-    // // check balance of nft marketplace contract
-    // ft_program.balance_of(MARKET_ID).check(winner_price);
+    // Check balance of nft marketplace contract
+    ft_program.balance_of(MARKET_ID).check(winner_price);
 
-    // // check item state
+    // TODO: Check item state
     // let mut item = Item {
     //     owner: SELLER.into(),
     //     ft_contract_id: Some(ft_program.actor_id()),
@@ -251,27 +251,27 @@ fn auction_with_fungible_tokens() {
     // item.auction = None;
     // item.owner = winner.into();
 
-    // // check item state
+    // TODO: Check item state
     // market
     //     .meta_state()
     //     .item_info(nft_program.actor_id(), TOKEN_ID.into())
     //     .check(item);
 
-    // // check owner
+    // TODO: Check owner
     // nft_program
     //     .meta_state()
     //     .owner_id(TOKEN_ID)
     //     .check(winner.into());
 
-    // let treasury_fee = winner_price * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
+    let treasury_fee = winner_price * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
 
-    // // check balance of SELLER
-    // ft_program
-    //     .balance_of(SELLER)
-    //     .check(winner_price - treasury_fee);
+    // Check balance of SELLER
+    ft_program
+        .balance_of(SELLER)
+        .check(winner_price - treasury_fee);
 
-    // // check balance of TREASURY_ID
-    // ft_program.balance_of(TREASURY_ID).check(treasury_fee);
+    // Check balance of TREASURY_ID
+    ft_program.balance_of(TREASURY_ID).check(treasury_fee);
 }
 
 #[test]
@@ -291,43 +291,43 @@ fn auction_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), None));
 
-    // create auction failures
+    // Create auction failures
 
-    // // must fail since the bid period is less than 1 minute
-    // market
-    //     .create_auction(
-    //         &system,
-    //         SELLER,
-    //         (nft_program.actor_id(), TOKEN_ID.into(), None),
-    //         NFT_PRICE,
-    //         MIN_BID_PERIOD - 100,
-    //         DURATION,
-    //     )
-    //     .failed();
+    // Must fail since the bid period is less than 1 minute
+    market
+        .create_auction(
+            &system,
+            SELLER,
+            (nft_program.actor_id(), TOKEN_ID.into(), None),
+            NFT_PRICE,
+            MIN_BID_PERIOD - 100,
+            DURATION,
+        )
+        .failed(MarketErr::AuctionBidPeriodOrDurationIsInvalid);
 
-    // // must fail since the bid period is less than 1 minute
-    // market
-    //     .create_auction(
-    //         &system,
-    //         SELLER,
-    //         (nft_program.actor_id(), TOKEN_ID.into(), None),
-    //         NFT_PRICE,
-    //         BID_PERIOD,
-    //         MIN_BID_PERIOD - 100,
-    //     )
-    //     .failed();
+    // Must fail since the bid duration is less than 1 minute
+    market
+        .create_auction(
+            &system,
+            SELLER,
+            (nft_program.actor_id(), TOKEN_ID.into(), None),
+            NFT_PRICE,
+            BID_PERIOD,
+            MIN_BID_PERIOD - 100,
+        )
+        .failed(MarketErr::AuctionBidPeriodOrDurationIsInvalid);
 
-    // // must fail since the min price is equal to zero
-    // market
-    //     .create_auction(
-    //         &system,
-    //         SELLER,
-    //         (nft_program.actor_id(), TOKEN_ID.into(), None),
-    //         0,
-    //         BID_PERIOD,
-    //         DURATION,
-    //     )
-    //     .failed();
+    // Must fail since the min price is equal to zero
+    market
+        .create_auction(
+            &system,
+            SELLER,
+            (nft_program.actor_id(), TOKEN_ID.into(), None),
+            0,
+            BID_PERIOD,
+            DURATION,
+        )
+        .failed(MarketErr::AuctionMinPriceIsZero);
 
     // start auction
     market
@@ -341,48 +341,49 @@ fn auction_failures() {
         )
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), NFT_PRICE));
 
-    // // must fail since the auction is already on
-    // market
-    //     .create_auction(
-    //         &system,
-    //         SELLER,
-    //         (nft_program.actor_id(), TOKEN_ID.into(), None),
-    //         NFT_PRICE,
-    //         BID_PERIOD,
-    //         DURATION,
-    //     )
-    //     .failed();
+    // Must fail since the auction is already on
+    market
+        .create_auction(
+            &system,
+            SELLER,
+            (nft_program.actor_id(), TOKEN_ID.into(), None),
+            NFT_PRICE,
+            BID_PERIOD,
+            DURATION,
+        )
+        .failed(MarketErr::AuctionIsAlreadyExists);
 
     // add bid and create auction failures
 
-    // must fail since the price is equal to the current bid price
-    system.mint_to(BUYER, NFT_PRICE);
-    // market
-    //     .add_bid(
-    //         BUYER,
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         NFT_PRICE,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
-    // // must fail since the auction is not over
-    // market
-    //     .settle_auction(SELLER, nft_program.actor_id(), TOKEN_ID.into())
-    //     .failed();
+    // Must fail since the price is equal to the current bid price
+    system.mint_to(BUYER, NFT_PRICE * 2);
+    market
+        .add_bid(
+            BUYER,
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            NFT_PRICE,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::WrongPrice);
 
-    system.spend_blocks((DURATION as u32) / 1000);
+    // Must fail since the auction is not over
+    market
+        .settle_auction(SELLER, nft_program.actor_id(), TOKEN_ID.into())
+        .failed(MarketErr::AuctionIsNotOver);
 
-    // // must fail since the auction has alredy ended
-    // market
-    //     .add_bid(
-    //         BUYER,
-    //         nft_program.actor_id(),
-    //         TOKEN_ID.into(),
-    //         NFT_PRICE,
-    //         NFT_PRICE,
-    //     )
-    //     .failed();
+    system.spend_blocks((DURATION as u32) / 1000 + 1);
+
+    // Must fail since the auction has alredy ended
+    market
+        .add_bid(
+            BUYER,
+            nft_program.actor_id(),
+            TOKEN_ID.into(),
+            NFT_PRICE,
+            NFT_PRICE,
+        )
+        .failed(MarketErr::AuctionIsAlreadyEnded);
 
     market
         .settle_auction(SELLER, nft_program.actor_id(), TOKEN_ID.into())
@@ -391,8 +392,8 @@ fn auction_failures() {
             token_id: TOKEN_ID.into(),
         });
 
-    // // must fail since the auction doesn't exist
-    // market
-    //     .settle_auction(SELLER, nft_program.actor_id(), TOKEN_ID.into())
-    //     .failed();
+    // Must fail since the auction doesn't exist
+    market
+        .settle_auction(SELLER, nft_program.actor_id(), TOKEN_ID.into())
+        .failed(MarketErr::AuctionDoesNotExists);
 }
