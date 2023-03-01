@@ -1360,9 +1360,9 @@ dependencies = [
 
 [[package]]
 name = "sp-core-hashing"
-version = "6.0.0"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbc2d1947252b7a4e403b0a260f596920443742791765ec111daa2bbf98eff25"
+checksum = "d607f7209b1b9571177fc3722a03312df03606bb65f89317ba686d5fa59d438f"
 dependencies = [
  "blake2",
  "byteorder",
@@ -1375,9 +1375,9 @@ dependencies = [
 
 [[package]]
 name = "sp-std"
-version = "6.0.0"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af0ee286f98455272f64ac5bb1384ff21ac029fbb669afbaf48477faff12760e"
+checksum = "1de8eef39962b5b97478719c493bed2926cf70cb621005bbf68ebe58252ff986"
 
 [[package]]
 name = "spin"
