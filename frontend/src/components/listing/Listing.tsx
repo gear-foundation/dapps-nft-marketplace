@@ -11,23 +11,21 @@ type Props = {
 
 function Listing({ children, item }: Props) {
   const { heading, description, owner, price, src, rarity, attrs, offers } = item;
-  // const isAnyOffer = offers.length > 0;
+  const isAnyOffer = !!offers?.length;
 
   const getAttributes = () =>
     attrs &&
-    // eslint-disable-next-line react/no-array-index-key
-    Object.keys(attrs).map((attr, index) => <p key={index} className={styles.text}>{`${attr}: ${attrs![attr]}`}</p>);
+    Object.keys(attrs).map((attr, index) => (
+      // eslint-disable-next-line react/no-array-index-key
+      <p key={index} className={styles.text}>{`${attr}: ${attrs![attr]}`}</p>
+    ));
 
-  // const getOffers = () =>
-  //   offers
-  //     ?.map(({ price: offerPrice, id, hash_: hash }, index) => (
-  //       // eslint-disable-next-line react/no-array-index-key
-  //       <Offer key={index} bid={offerPrice} bidder={id} hash={hash} listingOwner={owner} />
-  //     ))
-  //     .reverse();
-
-  const getOffers = () => [];
-  const isAnyOffer = false;
+  const getOffers = () =>
+    offers
+      ?.map(({ price: offerPrice, bidder }) => (
+        <Offer key={offerPrice} price={offerPrice} bidder={bidder} listingOwner={owner} />
+      ))
+      .reverse();
 
   return (
     <>
@@ -47,7 +45,8 @@ function Listing({ children, item }: Props) {
         <div>
           {rarity && <Card heading="Rarity" text={rarity} />}
           {attrs && <Card heading="Attributes">{getAttributes()}</Card>}
-          <Card heading={isAnyOffer ? 'Offers' : 'No offers'}>{getOffers()}</Card>
+
+          {offers && <Card heading={isAnyOffer ? 'Offers' : 'No offers'}>{getOffers()}</Card>}
         </div>
       </div>
     </>

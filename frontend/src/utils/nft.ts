@@ -35,15 +35,29 @@ function getNFTProps(nft: NFT, isOwner: boolean) {
   return { name, path, src, text, button: buttonProp, price: priceProp };
 }
 
+function getOffers(offers: MarketNFT['offers'] | undefined) {
+  if (!offers) return [];
+
+  const numberRegex = /\d+/;
+
+  return Object.entries(offers).map(([key, bidder]) => {
+    const [price] = key.match(numberRegex) || [''];
+
+    return { price, bidder };
+  });
+}
+
 function getListingProps(baseNft: BaseNFT, marketNft: MarketNFT | null | undefined, details: NFTDetails | undefined) {
   const { id, name, description, ownerId, media } = baseNft;
-  const { auction, offers } = marketNft || {};
+  const { auction } = marketNft || {};
   const { rarity, attributes } = details || {};
 
   const heading = `${name} #${id}`;
   const src = getIpfsAddress(media);
 
   const price = auction ? auction.currentPrice : marketNft?.price;
+
+  const offers = auction ? undefined : getOffers(marketNft?.offers);
 
   return { heading, description, owner: ownerId, price, src, rarity, attrs: attributes, offers };
 }

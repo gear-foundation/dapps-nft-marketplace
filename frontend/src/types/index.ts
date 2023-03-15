@@ -16,12 +16,7 @@ type NFTDetails = {
   attributes: { [key: string]: string };
 };
 
-type Offer = {
-  id: HexString;
-  price: string;
-  hash_?: HexString;
-  ftContractId?: HexString | null;
-};
+type Offers = { [key: `[null,${number}]`]: HexString };
 
 type Auction = {
   bidPeriod: number;
@@ -37,8 +32,8 @@ type MarketNFT = {
   ftContractId: HexString | null;
   price: number | null;
   auction: Auction | null;
-  offers: {};
-  tx: null; // TODO: wtf is tx?
+  offers: Offers;
+  tx: null;
 };
 
 type NFT = BaseNFT & MarketNFT;
@@ -59,7 +54,7 @@ type Listing = {
   description: string;
   owner: HexString;
   src: string;
-  offers: {} | undefined;
+  offers?: { bidder: string; price: string }[];
   price?: MarketNFT['price'];
   rarity?: string;
   attrs?: NFTDetails['attributes'];
@@ -74,7 +69,7 @@ type AuctionFormValues = {
 export type {
   BaseNFT,
   NFTDetails,
-  Offer,
+  Offers,
   Auction,
   MarketNFT,
   NFT,
