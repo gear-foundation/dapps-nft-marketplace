@@ -6,6 +6,7 @@ use nft_marketplace::contract::BASE_PERCENT;
 use utils_gclient::{common, ft, marketplace};
 
 #[tokio::test]
+#[ignore]
 async fn success_offers_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 
@@ -224,6 +225,7 @@ async fn success_offers_gclient() -> gclient::Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn fail_offers_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 
@@ -414,6 +416,7 @@ async fn fail_offers_gclient() -> gclient::Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn success_buy_with_ft_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 
@@ -488,6 +491,7 @@ async fn success_buy_with_ft_gclient() -> gclient::Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn success_buy_with_native_tokens_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 
@@ -543,6 +547,7 @@ async fn success_buy_with_native_tokens_gclient() -> gclient::Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn fail_buy_with_ft_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 

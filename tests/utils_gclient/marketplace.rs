@@ -206,6 +206,7 @@ pub async fn create_auction(
     Ok(())
 }
 
+#[allow(unused)]
 pub async fn add_bid(
     api: &GearApi,
     listener: &mut EventListener,
@@ -239,6 +240,7 @@ pub async fn add_bid(
     Ok(())
 }
 
+#[allow(unused)]
 pub async fn settle_auction(
     api: &GearApi,
     listener: &mut EventListener,
