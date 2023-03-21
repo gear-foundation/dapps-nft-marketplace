@@ -1,5 +1,6 @@
 use super::common;
 use gclient::{EventListener, EventProcessor, GearApi};
+use gear_lib::non_fungible_token::token::TokenMetadata;
 use gstd::{prelude::*, ActorId};
 use market_io::TokenId;
 use nft_io::{InitNFT, NFTAction, NFTEvent};
@@ -31,7 +32,7 @@ pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
     let (message_id, program_id, _hash) = api
         .upload_program_bytes(
             gclient::code_from_os(NFT_WASM_PATH)?,
-            gclient::now_in_micros().to_le_bytes(),
+            gclient::now_micros().to_le_bytes(),
             init_nft_config,
             gas_info.min_limit,
             0,
@@ -60,7 +61,12 @@ pub async fn mint(
         program_id,
         NFTAction::Mint {
             transaction_id: tx_id,
-            token_metadata: Default::default(),
+            token_metadata: TokenMetadata {
+                name: "a".to_owned(),
+                description: "b".to_owned(),
+                media: "c".to_owned(),
+                reference: "d".to_owned(),
+            },
         },
     )
     .await?;
@@ -118,8 +124,12 @@ async fn send_message(
         .send_message(program_id.into(), payload, gas_info.min_limit, 0)
         .await?;
 
-    // TODO: assert!(listener.message_processed(message_id).await?.succeed());
+    println!("nft::send_message -> waiting processed!");
+    // assert!(listener.message_processed(message_id).await?.succeed());
+    println!("nft::send_message -> done processed!");
 
+    println!("nft::send_message -> waiting reply!");
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
+    println!("nft::send_message -> done reply!");
     Ok(reply_data_result.expect("Unexpected invalid reply."))
 }

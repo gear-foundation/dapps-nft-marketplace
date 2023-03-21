@@ -416,11 +416,12 @@ async fn fail_offers_gclient() -> gclient::Result<()> {
 }
 
 #[tokio::test]
-#[ignore]
 async fn success_buy_with_ft_gclient() -> gclient::Result<()> {
     let api = GearApi::dev().await?;
 
+    println!("BEFORE_INIT!");
     let (ft_contract, nft_contract, marketplace_contract) = common::init(&api).await?;
+    println!("AFTER_INIT!");
 
     {
         let seller_api = GearApi::dev().await?.with(common::SELLER)?;

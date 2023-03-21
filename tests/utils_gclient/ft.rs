@@ -12,6 +12,7 @@ pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
     let storage_code_hash = common::upload_with_code_hash(api, FT_STORAGE_WASM_PATH).await?;
     let ft_logic_code_hash = common::upload_with_code_hash(api, FT_LOGIC_WASM_PATH).await?;
 
+    println!("AAAA");
     let mut listener = api.subscribe().await?;
     assert!(listener.blocks_running().await?);
 
@@ -21,6 +22,7 @@ pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
     }
     .encode();
 
+    println!("AAA");
     let gas_info = api
         .calculate_upload_gas(
             None,
@@ -31,16 +33,19 @@ pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
         )
         .await?;
 
+    println!("AA");
     let (message_id, program_id, _hash) = api
         .upload_program_bytes(
             gclient::code_from_os(FT_MAIN_WASM_PATH)?,
-            gclient::now_in_micros().to_le_bytes(),
+            gclient::now_micros().to_le_bytes(),
             init_ftoken_config,
             gas_info.min_limit,
             0,
         )
         .await?;
+    println!("A");
     assert!(listener.message_processed(message_id).await?.succeed());
+    println!("B");
 
     let program_id: common::Hash = program_id
         .encode()
@@ -145,14 +150,18 @@ async fn send_message(
         .send_message(program_id.into(), payload, gas_info.min_limit * 2, 0)
         .await?;
 
-    // TODO: assert!(listener.message_processed(message_id).await?.succeed());
+    println!("ft::send_message -> waiting processed!");
+    // assert!(listener.message_processed(message_id).await?.succeed());
+    println!("ft::send_message -> done processed!");
 
+    println!("ft::send_message -> waiting reply!");
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
+    println!("ft::send_message -> done reply!");
     Ok(reply_data_result.expect("Unexpected invalid reply."))
 }
 
-fn assert_ft_ok(reply: &[u8]) {
-    let FTokenEvent::Ok = FTokenEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `FTokenEvent` data.") else {
+fn assert_ft_ok(mut reply: &[u8]) {
+    let FTokenEvent::Ok = FTokenEvent::decode(&mut reply).expect("Unexpected invalid `FTokenEvent` data.") else {
         panic!("Unexpected invalid `FTokenEvent`.");
     };
 }

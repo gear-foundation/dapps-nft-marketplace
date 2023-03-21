@@ -31,7 +31,7 @@ pub async fn init(api: &GearApi, admin: &ActorId, treasury: &ActorId) -> gclient
     let (message_id, program_id, _hash) = api
         .upload_program_bytes(
             gclient::code_from_os(MARKETPLACE_WASM_PATH)?,
-            gclient::now_in_micros().to_le_bytes(),
+            gclient::now_micros().to_le_bytes(),
             init_marketplace_config,
             gas_info.min_limit,
             0,
@@ -101,6 +101,7 @@ pub async fn add_ft_contract(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn add_market_data(
     api: &GearApi,
     listener: &mut EventListener,
@@ -167,6 +168,7 @@ pub async fn buy_item(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn create_auction(
     api: &GearApi,
     listener: &mut EventListener,
@@ -272,6 +274,7 @@ pub async fn settle_auction(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn add_offer(
     api: &GearApi,
     listener: &mut EventListener,
@@ -308,6 +311,7 @@ pub async fn add_offer(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn withdraw(
     api: &GearApi,
     listener: &mut EventListener,
@@ -343,6 +347,7 @@ pub async fn withdraw(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn accept_offer(
     api: &GearApi,
     listener: &mut EventListener,
@@ -404,8 +409,12 @@ async fn send_message(
         .send_message(program_id.into(), payload, gas_info.min_limit * 2, value)
         .await?;
 
-    // TODO: assert!(listener.message_processed(message_id).await?.succeed());
+    println!("marketplace::send_message -> waiting processed!");
+    // assert!(listener.message_processed(message_id).await?.succeed());
+    println!("marketplace::send_message -> done processed!");
 
+    println!("marketplace::send_message -> waiting reply!");
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
+    println!("marketplace::send_message -> done reply!");
     Ok(reply_data_result.expect("Unexpected invalid reply."))
 }

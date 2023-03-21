@@ -19,7 +19,7 @@ async-trait = "0.1.66"
 [dev-dependencies]
 gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "testnet" }
 gtest = { git = "https://github.com/gear-tech/gear.git", branch = "testnet" }
-gclient = { git = "https://github.com/gear-tech/gear.git", branch = "testnet" }
+gclient = { git = "https://github.com/gear-tech/gear.git", branch = "master" }
 tokio = "1"
 blake2-rfc = { version = "0.2.18", default-features = false }
 

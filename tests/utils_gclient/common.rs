@@ -49,8 +49,11 @@ pub async fn init(api: &GearApi) -> gclient::Result<(ActorId, ActorId, ActorId)>
     api.transfer(treasury_id.as_ref().into(), USERS_FUND)
         .await?;
 
+    println!("BEFORE INIT FT");
     let ft_contract = super::ft::init(api).await?;
+    println!("BEFORE INIT NFT");
     let nft_contract = super::nft::init(api).await?;
+    println!("AFTER!");
 
     {
         let seller_api = GearApi::dev().await?.with(SELLER)?;
@@ -91,10 +94,10 @@ pub async fn init(api: &GearApi) -> gclient::Result<(ActorId, ActorId, ActorId)>
     }
 
     let mut listener = api.subscribe().await?;
-    super::marketplace::add_ft_contract(&api, &mut listener, &market_contract, &ft_contract, false)
+    super::marketplace::add_ft_contract(api, &mut listener, &market_contract, &ft_contract, false)
         .await?;
     super::marketplace::add_nft_contract(
-        &api,
+        api,
         &mut listener,
         &market_contract,
         &nft_contract,
@@ -114,7 +117,9 @@ pub async fn upload_with_code_hash(
 
     code_hash[..].copy_from_slice(blake2b::blake2b(HASH_LENGTH, &[], &wasm_code).as_bytes());
 
+    println!("DRUN!");
     api.upload_code(wasm_code).await?;
+    println!("DRUN - AFTER!");
 
     Ok(code_hash)
 }
