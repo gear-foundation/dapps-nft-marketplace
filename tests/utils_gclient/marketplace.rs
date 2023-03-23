@@ -64,11 +64,13 @@ pub async fn add_nft_contract(
     .await?;
 
     if !should_fail {
-        let MarketEvent::NftContractAdded(_) = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::NftContractAdded(_)): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -91,11 +93,13 @@ pub async fn add_ft_contract(
     .await?;
 
     if !should_fail {
-        let MarketEvent::FtContractAdded(_) = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::FtContractAdded(_)): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -127,11 +131,13 @@ pub async fn add_market_data(
     .await?;
 
     if !should_fail {
-        let MarketEvent::MarketDataAdded { nft_contract_id: _, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::MarketDataAdded { nft_contract_id: _, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -143,6 +149,7 @@ pub async fn buy_item(
     program_id: &ActorId,
     nft_contract: &ActorId,
     token_id: TokenId,
+    value: u128,
     should_fail: bool,
 ) -> gclient::Result<()> {
     let reply = send_message(
@@ -153,16 +160,18 @@ pub async fn buy_item(
             nft_contract_id: *nft_contract,
             token_id,
         },
-        0,
+        value,
     )
     .await?;
 
     if !should_fail {
-        let MarketEvent::ItemSold { owner: _, token_id: _, nft_contract_id: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::ItemSold { owner: _, token_id: _, nft_contract_id: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -198,11 +207,13 @@ pub async fn create_auction(
     .await?;
 
     if !should_fail {
-        let MarketEvent::AuctionCreated { nft_contract_id: _, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::AuctionCreated { nft_contract_id: _, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -232,11 +243,13 @@ pub async fn add_bid(
     .await?;
 
     if !should_fail {
-        let MarketEvent::BidAdded { nft_contract_id: _, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::BidAdded { nft_contract_id: _, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -264,11 +277,13 @@ pub async fn settle_auction(
     .await?;
 
     if !should_fail {
-        let MarketEvent::AuctionSettled { nft_contract_id: _, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::AuctionSettled { nft_contract_id: _, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -301,11 +316,13 @@ pub async fn add_offer(
     .await?;
 
     if !should_fail {
-        let MarketEvent::OfferAdded { nft_contract_id: _, ft_contract_id:_, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::OfferAdded { nft_contract_id: _, ft_contract_id:_, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -337,11 +354,13 @@ pub async fn withdraw(
     .await?;
 
     if !should_fail {
-        let MarketEvent::Withdraw { nft_contract_id: _, token_id: _, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::Withdraw { nft_contract_id: _, token_id: _, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -373,11 +392,13 @@ pub async fn accept_offer(
     .await?;
 
     if !should_fail {
-        let MarketEvent::OfferAccepted { nft_contract_id: _, token_id: _, new_owner:_, price: _ } = MarketEvent::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
+        let Ok(MarketEvent::OfferAccepted { nft_contract_id: _, token_id: _, new_owner:_, price: _ }): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketEvent` data.") else {
             panic!("Unexpected invalid `MarketEvent`.");
         };
     } else {
-        MarketErr::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.");
+        let Err(_): Result<MarketEvent, MarketErr> = Result::decode(&mut reply.as_ref()).expect("Unexpected invalid `MarketErr` data.") else {
+            panic!("Unexpected invalid `MarketErr`.");
+        };
     }
 
     Ok(())
@@ -409,12 +430,6 @@ async fn send_message(
         .send_message(program_id.into(), payload, gas_info.min_limit * 2, value)
         .await?;
 
-    println!("marketplace::send_message -> waiting processed!");
-    // assert!(listener.message_processed(message_id).await?.succeed());
-    println!("marketplace::send_message -> done processed!");
-
-    println!("marketplace::send_message -> waiting reply!");
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
-    println!("marketplace::send_message -> done reply!");
     Ok(reply_data_result.expect("Unexpected invalid reply."))
 }

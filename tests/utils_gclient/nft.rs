@@ -124,12 +124,6 @@ async fn send_message(
         .send_message(program_id.into(), payload, gas_info.min_limit, 0)
         .await?;
 
-    println!("nft::send_message -> waiting processed!");
-    // assert!(listener.message_processed(message_id).await?.succeed());
-    println!("nft::send_message -> done processed!");
-
-    println!("nft::send_message -> waiting reply!");
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
-    println!("nft::send_message -> done reply!");
     Ok(reply_data_result.expect("Unexpected invalid reply."))
 }

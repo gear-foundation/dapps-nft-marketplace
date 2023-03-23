@@ -49,11 +49,8 @@ pub async fn init(api: &GearApi) -> gclient::Result<(ActorId, ActorId, ActorId)>
     api.transfer(treasury_id.as_ref().into(), USERS_FUND)
         .await?;
 
-    println!("BEFORE INIT FT");
     let ft_contract = super::ft::init(api).await?;
-    println!("BEFORE INIT NFT");
     let nft_contract = super::nft::init(api).await?;
-    println!("AFTER!");
 
     {
         let seller_api = GearApi::dev().await?.with(SELLER)?;
@@ -117,9 +114,21 @@ pub async fn upload_with_code_hash(
 
     code_hash[..].copy_from_slice(blake2b::blake2b(HASH_LENGTH, &[], &wasm_code).as_bytes());
 
-    println!("DRUN!");
-    api.upload_code(wasm_code).await?;
-    println!("DRUN - AFTER!");
+    match api.upload_code(wasm_code).await {
+        // Catch re-upload
+        Err(gclient::Error::Subxt(subxt::Error::Runtime(subxt::error::DispatchError::Module(
+            subxt::error::ModuleError {
+                error_data:
+                    subxt::error::ModuleErrorData {
+                        pallet_index: 104,
+                        error: [6, 0, 0, 0],
+                    },
+                ..
+            },
+        )))) => {}
+        Err(error) => return Err(error),
+        _ => {}
+    };
 
     Ok(code_hash)
 }
