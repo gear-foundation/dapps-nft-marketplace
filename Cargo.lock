@@ -917,8 +917,8 @@ dependencies = [
 
 [[package]]
 name = "ft-main-io"
-version = "2.0.0"
-source = "git+https://github.com/gear-dapps/sharded-fungible-token.git?tag=2.0.0#0f946c5cb468930b45323cc214d6e9bd345fce9f"
+version = "2.1.0"
+source = "git+https://github.com/gear-dapps/sharded-fungible-token.git?tag=2.1.0#328f1684673862ecf706fa7781a4dda718a89c9c"
 dependencies = [
  "gmeta",
  "gstd 0.1.0 (git+https://github.com/gear-tech/gear.git?branch=testnet)",
@@ -3943,7 +3943,7 @@ checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
  "digest 0.10.6",
- "rand 0.8.5",
+ "rand 0.7.3",
  "static_assertions",
 ]
 
