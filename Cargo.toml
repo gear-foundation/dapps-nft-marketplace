@@ -18,7 +18,7 @@ async-trait = "0.1.68"
 [dev-dependencies]
 gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], rev = "5c685d0f15c412ab6ee019ceaf7ce084426dfb68" }
 gtest = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0f15c412ab6ee019ceaf7ce084426dfb68" }
-subxt = { version = "0.27", default-features = false }
+subxt = { version = "0.28", default-features = false }
 gclient = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0f15c412ab6ee019ceaf7ce084426dfb68" }
 tokio = "1"
 blake2-rfc = { version = "0.2.18", default-features = false }
