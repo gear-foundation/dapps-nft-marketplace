@@ -2291,8 +2291,8 @@ dependencies = [
 
 [[package]]
 name = "nft-io"
-version = "0.1.1"
-source = "git+https://github.com/gear-dapps/non-fungible-token.git?branch=update-deps#14543ea379d9a43dabad12274955e10ecf693974"
+version = "0.2.11"
+source = "git+https://github.com/gear-dapps/non-fungible-token.git?tag=0.2.11#b087602a4ac3526727079d83128b2938dd331e1c"
 dependencies = [
  "gear-lib",
  "gmeta",

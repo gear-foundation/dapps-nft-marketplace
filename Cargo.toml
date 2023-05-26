@@ -54,7 +54,7 @@ market-io = { path = "io" }
 market-state = { path = "state" }
 hashbrown = "0.13.2"
 async-trait = "0.1.68"
-nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", branch = "update-deps" }
+nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.11" }
 primitive-types = { version = "0.12.1", default-features = false }
 sp-core-hashing = { version = "8.0.0", default-features = false }
 gear-lib = { git = "https://github.com/gear-dapps/gear-lib", tag = "0.3.7" }
