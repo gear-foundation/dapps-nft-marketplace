@@ -45,7 +45,7 @@ deps:
 	@path=target/nft.wasm;\
 	if [ ! -f $$path ]; then\
 	    curl -L\
-	        https://github.com/gear-dapps/non-fungible-token/releases/download/0.2.11/nft-0.2.11.wasm\
+	        https://github.com/gear-dapps/non-fungible-token/releases/download/0.2.11/nft.wasm\
 	        -o $$path;\
 	fi
 
