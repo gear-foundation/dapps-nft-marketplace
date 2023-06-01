@@ -10,7 +10,7 @@ gstd = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0f15c412ab6
 primitive-types = { version = "0.12.1", default-features = false, features = ["scale-info"] }
 nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.10" }
 market-io = { path = "io" }
-sp-core-hashing = { version = "8.0.0", default-features = false }
+sp-core-hashing = { version = "9.0.0", default-features = false }
 ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token.git", tag = "2.1.1" }
 gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.6" }
 async-trait = "0.1.68"
