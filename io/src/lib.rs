@@ -13,7 +13,7 @@ pub struct MarketMetadata;
 
 impl Metadata for MarketMetadata {
     type Init = In<InitMarket>;
-    type Handle = InOut<MarketAction, MarketEvent>;
+    type Handle = InOut<MarketAction, Result<MarketEvent, MarketErr>>;
     type Others = ();
     type Reply = ();
     type Signal = ();

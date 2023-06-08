@@ -454,6 +454,15 @@ async fn success_buy_with_ft_gclient() -> gclient::Result<()> {
         )
         .await?;
 
+        let buyer_balance = ft::balance_of(
+            &buyer_api,
+            &mut listener,
+            &ft_contract,
+            &common::get_current_actor_id(&buyer_api),
+        )
+        .await?;
+        assert_eq!(buyer_balance, common::NFT_PRICE);
+
         marketplace::buy_item(
             &buyer_api,
             &mut listener,
@@ -464,6 +473,15 @@ async fn success_buy_with_ft_gclient() -> gclient::Result<()> {
             false,
         )
         .await?;
+
+        let buyer_balance = ft::balance_of(
+            &buyer_api,
+            &mut listener,
+            &ft_contract,
+            &common::get_current_actor_id(&buyer_api),
+        )
+        .await?;
+        assert_eq!(buyer_balance, 0);
     }
 
     let mut listener = api.subscribe().await?;
