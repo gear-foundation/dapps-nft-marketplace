@@ -3,7 +3,7 @@ use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
 use market_io::*;
 
 const MIN_TREASURY_FEE: u16 = 0;
-const MAX_TREASURT_FEE: u16 = 5;
+const MAX_TREASURY_FEE: u16 = 5;
 pub const BASE_PERCENT: u16 = 100;
 pub const MINIMUM_VALUE: u64 = 500;
 
@@ -111,9 +111,10 @@ impl MarketHandler for Market {
 async fn main() {
     let action: MarketAction = msg::load().expect("Could not load Action");
     let market: &mut Market = unsafe { MARKET.get_or_insert(Market::default()) };
-    let result = match action {
+
+    let result: Result<MarketEvent, MarketErr> = match action {
         MarketAction::AddNftContract(nft_contract_id) => market.add_nft_contract(&nft_contract_id),
-        MarketAction::AddFTContract(nft_contract_id) => market.add_ft_contract(&nft_contract_id),
+        MarketAction::AddFTContract(ft_contract_id) => market.add_ft_contract(&ft_contract_id),
         MarketAction::AddMarketData {
             nft_contract_id,
             ft_contract_id,
@@ -187,7 +188,8 @@ async fn main() {
             token_id,
         } => market.settle_auction(&nft_contract_id, token_id).await,
     };
-    reply(result).expect("Failed to encode or reply with `Result<MarketEvent, MarketErr>`");
+
+    reply(result).expect("Failed to encode or reply with `Result<MarketEvent, MarketErr>`.");
 }
 
 #[no_mangle]
@@ -198,8 +200,8 @@ extern "C" fn init() {
     // because this is minimum value. But if `MIN_TREASURY_FEE` could be changed later,
     // usage of `==` operator can lead to unwanted errors or exploits
     #[allow(clippy::absurd_extreme_comparisons)]
-    if config.treasury_fee <= MIN_TREASURY_FEE || config.treasury_fee > MAX_TREASURT_FEE {
-        panic!("Wrong treasury fee");
+    if config.treasury_fee <= MIN_TREASURY_FEE || config.treasury_fee > MAX_TREASURY_FEE {
+        panic!("Wrong treasury fee.");
     }
 
     let market = Market {
@@ -208,6 +210,7 @@ extern "C" fn init() {
         treasury_fee: config.treasury_fee,
         ..Default::default()
     };
+
     unsafe { MARKET = Some(market) };
 }
 

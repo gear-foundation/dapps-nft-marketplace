@@ -21,11 +21,15 @@ fn buy_with_fungible_tokens() {
         .succeed((nft_program.actor_id(), TOKEN_ID.into(), Some(NFT_PRICE)));
 
     let tx_id: u64 = 100;
-    ft_program.mint(BUYER, tx_id, NFT_PRICE);
+    ft_program.mint(tx_id, BUYER, NFT_PRICE);
+
+    ft_program.balance_of(BUYER).check(NFT_PRICE);
 
     market
         .buy_item(BUYER, nft_program.actor_id(), TOKEN_ID.into(), 0)
         .succeed((BUYER.into(), nft_program.actor_id(), TOKEN_ID.into()));
+
+    ft_program.balance_of(BUYER).check(0);
 
     // Check balance of SELLER
     let treasury_fee = NFT_PRICE * ((TREASURY_FEE * BASE_PERCENT) as u128) / 10_000u128;
