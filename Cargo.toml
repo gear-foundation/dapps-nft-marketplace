@@ -18,10 +18,13 @@ async-trait.workspace = true
 [dev-dependencies]
 gstd = { workspace = true, features = ["debug"] }
 gtest.workspace = true
-subxt.workspace = true
 gclient.workspace = true
 tokio.workspace = true
 blake2-rfc.workspace = true
+ft-main.workspace = true
+ft-logic.workspace = true
+ft-storage.workspace = true
+nft.workspace = true
 
 [build-dependencies]
 gmeta.workspace = true
@@ -48,22 +51,25 @@ authors = ["Gear Technologies"]
 license = "MIT"
 
 [workspace.dependencies]
-ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token", tag = "2.1.2" }
-gstd = { git = "https://github.com/gear-tech/gear", rev = "78dfa07" }
+ft-main-io = { git = "https://github.com/gear-dapps/sharded-fungible-token", branch = "update-deps" }
+ft-main = { git = "https://github.com/gear-dapps/sharded-fungible-token", branch = "update-deps" }
+ft-logic = { git = "https://github.com/gear-dapps/sharded-fungible-token", branch = "update-deps" }
+ft-storage = { git = "https://github.com/gear-dapps/sharded-fungible-token", branch = "update-deps" }
+gstd = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
 market-io = { path = "io" }
 market-state = { path = "state" }
 hashbrown = "0.13.2"
 async-trait = "0.1.68"
-nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", tag = "0.2.11" }
+nft-io = { git = "https://github.com/gear-dapps/non-fungible-token.git", branch = "update-deps"  }
+nft = { git = "https://github.com/gear-dapps/non-fungible-token.git", branch = "update-deps"  }
 primitive-types = { version = "0.12.1", default-features = false }
 sp-core-hashing = { version = "8.0.0", default-features = false }
-gear-lib = { git = "https://github.com/gear-dapps/gear-lib", tag = "0.3.7" }
-gmeta = { git = "https://github.com/gear-tech/gear", rev = "78dfa07" }
-gtest = { git = "https://github.com/gear-tech/gear", rev = "78dfa07" }
-gclient = { git = "https://github.com/gear-tech/gear", rev = "78dfa07" }
-subxt = { version = "0.27", default-features = false }
+gear-lib = { git = "https://github.com/gear-dapps/gear-lib", branch = "update-deps" }
+gmeta = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
+gtest = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
+gclient = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
 tokio = "1"
 blake2-rfc = { version = "0.2.18", default-features = false }
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", rev = "78dfa07" }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", rev = "946ac47" }
 scale-info = { version = "2", default-features = false }
 parity-scale-codec = { version = "3", default-features = false }

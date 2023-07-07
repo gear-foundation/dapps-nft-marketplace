@@ -1,6 +1,6 @@
 use blake2_rfc::blake2b;
-use gclient::GearApi;
 use gstd::ActorId;
+use gclient::{Error as GclientError,GearApi};
 
 pub const HASH_LENGTH: usize = 32;
 pub type Hash = [u8; HASH_LENGTH];
@@ -116,16 +116,8 @@ pub async fn upload_with_code_hash(
 
     match api.upload_code(wasm_code).await {
         // Catch re-upload
-        Err(gclient::Error::Subxt(subxt::error::Error::Runtime(
-            subxt::error::DispatchError::Module(subxt::error::ModuleError {
-                error_data:
-                    subxt::error::ModuleErrorData {
-                        pallet_index: 104,
-                        error: [6, 0, 0, 0],
-                    },
-                ..
-            }),
-        ))) => {}
+
+        Err(GclientError::ProgramAlreadyExists(_)) => {}
         Err(error) => return Err(error),
         _ => {}
     };
