@@ -17,14 +17,15 @@ init:
 
 lint:
 	@echo ⚙️ Running the linter...
+	@cargo clippy -- -D warnings
 	@cargo clippy -Fbinary-vendor --workspace --all-targets -- -D warnings
 
 pre-commit: fmt lint full-test
 
-test: 
+test:
 	@echo ⚙️ Running unit tests...
 	@cargo t -Fbinary-vendor
 
-full-test: 
+full-test:
 	@echo ⚙️ Running all tests...
-	@cargo t -Fbinary-vendor -- --include-ignored
+	@cargo t -Fbinary-vendor -- --include-ignored --test-threads=1
