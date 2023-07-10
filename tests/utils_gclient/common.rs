@@ -137,10 +137,9 @@ pub async fn upload_with_code_hash(
 
     code_hash[..].copy_from_slice(blake2b::blake2b(HASH_LENGTH, &[], &wasm_code).as_bytes());
 
-    match api.upload_code(wasm_code).await {
-        Err(error) => return Err(error),
-        _ => {}
-    };
+    if let Err(error) = api.upload_code(wasm_code).await {
+        return Err(error);
+    }
 
     Ok(code_hash)
 }
