@@ -1,5 +1,4 @@
 use super::{prelude::*, MetaStateReply, RunResult};
-//use super::common::MetaStateReply;
 use gstd::ActorId;
 use gtest::{Program as InnerProgram, System};
 use market_io::*;
